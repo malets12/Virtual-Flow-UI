@@ -1,6 +1,6 @@
 class Key {
-  readonly map: ReadonlyMap<string, ReadonlyMap<string, string>>;
-  readonly dimensionsWithZero: ReadonlySet<string>;
+  readonly map:ReadonlyMap<string, ReadonlyMap<string, string>>;
+  readonly dimensionsWithZero:ReadonlySet<string>;
 
   constructor() {
     const key = {

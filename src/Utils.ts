@@ -28,19 +28,29 @@ export function abbrN(value:number):string {
     return asString;
 }
 
-export function markHasLocalCopy():void {
-    window.localStorage.setItem(LOCAL_COPY, "true");
-}
-
 export function doFullReload():void {
     window.localStorage.clear();
     location.reload();
 }
 
-export function showLoader():void {
-    document.getElementById("loader").style.display = null;
+namespace LocalStorage {
+    const LOCAL_COPY:string = "tranchesLocalCopy";
+    export function markHasLocalCopy():void {
+        window.localStorage.setItem(LOCAL_COPY, "true");
+    }
+
+    export function hasLocalCopy():boolean {
+        return window.localStorage.getItem(LOCAL_COPY) === "true";
+    }
 }
 
-export function hideLoader():void {
-    document.getElementById("loader").style.display = "none";
+namespace Loader {
+    const LOADER = "loader";
+    export function showLoader():void {
+        document.getElementById(LOADER).style.display = null;
+    }
+
+    export function hideLoader():void {
+        document.getElementById(LOADER).style.display = "none";
+    }
 }

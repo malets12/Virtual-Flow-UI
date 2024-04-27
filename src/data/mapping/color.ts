@@ -1,7 +1,7 @@
 import {objToStrMap} from "../../Utils.ts";
 
 class Color {
-  readonly map: ReadonlyMap<string, string>;
+  readonly map:ReadonlyMap<string, string>;
 
   constructor() {
     const colors = {

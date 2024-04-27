@@ -1,6 +1,5 @@
 export namespace Constant {
-    export const PARTS:number = 24
-    export const LOCAL_COPY:string = "tranchesLocalCopy";
+    export const PARTS:number = 24;
     export const FIRST_COLUMN_SLIDERS:ReadonlyArray<string> = ["MW", "SlogP", "HBA", "HBD", "RotB", "TPSA", "MR", "logS", "AromProportion"];
 
     export enum WorkerAction { LOAD, SAVE_KEY, CALCULATE , RELOAD, SAVE_COMPLETE}
@@ -13,4 +12,6 @@ export namespace Constant {
     }
 
     export enum Source { NETWORK, DATABASE}
+
+    export enum Axis { X = "x", Y = "y" }
 }

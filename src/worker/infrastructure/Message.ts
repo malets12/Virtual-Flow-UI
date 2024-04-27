@@ -1,8 +1,9 @@
-import {Axis, Limits, CalculationResult} from "../State.ts";
 import type {Source} from "../../Enum.ts";
 import {WorkerAction} from "../../Enum.ts";
 
 namespace Message {
+    import Axis = State.AxisValues;
+    import Limits = State.Limits;
 
     private abstract class ActionMessage {
         readonly action: WorkerAction;
@@ -22,14 +23,14 @@ namespace Message {
     }
 
     export class CalculationRequestMessage extends ActionMessage {
-        readonly isInit: boolean;
-        readonly axis: Axis;
-        readonly possibleValues: ReadonlyMap<string, Limits>;
-        readonly notSelectedDimensions: ReadonlyArray<string>;
+        readonly isInit:boolean;
+        readonly axis:Axis;
+        readonly possibleValues:ReadonlyMap<string, Limits>;
+        readonly notSelectedDimensions:ReadonlyArray<string>;
 
-        constructor(isInit: boolean, axis: Axis,
-                    possibleValues: ReadonlyMap<string, Limits>,
-                    notSelectedDimensions: ReadonlyArray<string>) {
+        constructor(isInit:boolean, axis:Axis,
+                    possibleValues:ReadonlyMap<string, Limits>,
+                    notSelectedDimensions:ReadonlyArray<string>) {
             super(WorkerAction.CALCULATE);
             this.isInit = isInit;
             this.axis = axis;
