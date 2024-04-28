@@ -86,6 +86,14 @@ namespace Downloads {
             "[" + result.map(arr => arr.join("|")).join("][") + "]"]; //metatranch, tranch
     }
 
+    function findInbox():ReadonlyArray<string> {
+        return Array.from(document.getElementsByClassName("inbox"))
+            .map(cell => cell.id)
+            .filter(id => cellToTranches.has(id))
+            .map(id => cellToTranches.get(id))
+            .reduce((arr1, arr2) => [...arr1, ...arr2]);
+    }
+
     //const COLLECTIONS = {"JSON_collections_keys": "collections_tmp.json", "JSON_collections": "collections.json"};
 // function render_collections_downloads() {
 //     const DloadC = document.createElement("div");
