@@ -25,10 +25,7 @@ export namespace Constant {
 
     export enum Database { NAME = "tranches-db", VERSION = 1, STORE_NAME = "tranches-jsons" }
 
-    export enum EventName {
-        SAVE_TO_DATABASE = "save-to-database",
-        CALCULATION_DONE = "calculation-done"
-    }
+    export enum EventName { SAVE_TO_DATABASE = "save-to-database", CALCULATION_DONE = "calculation-done" }
 
     export enum Source { NETWORK, DATABASE}
 

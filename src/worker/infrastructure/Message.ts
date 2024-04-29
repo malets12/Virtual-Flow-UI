@@ -1,9 +1,12 @@
-import type {Source} from "../../Enum.ts";
-import {WorkerAction} from "../../Enum.ts";
+import {Constant} from "../../Constant.ts";
+import {State, Calculation} from "../../State.ts";
 
 namespace Message {
-    import Axis = State.AxisValues;
+    import WorkerAction = Constant.WorkerAction;
+    import AxisValues = State.AxisValues;
     import Limits = State.Limits;
+    import Source = Constant.Source;
+    import CalculationResult = Calculation.CalculationResult;
 
     private abstract class ActionMessage {
         readonly action: WorkerAction;
@@ -24,11 +27,11 @@ namespace Message {
 
     export class CalculationRequestMessage extends ActionMessage {
         readonly isInit:boolean;
-        readonly axis:Axis;
+        readonly axis:AxisValues;
         readonly possibleValues:ReadonlyMap<string, Limits>;
         readonly notSelectedDimensions:ReadonlyArray<string>;
 
-        constructor(isInit:boolean, axis:Axis,
+        constructor(isInit:boolean, axis:AxisValues,
                     possibleValues:ReadonlyMap<string, Limits>,
                     notSelectedDimensions:ReadonlyArray<string>) {
             super(WorkerAction.CALCULATE);

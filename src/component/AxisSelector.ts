@@ -9,8 +9,8 @@ namespace AxisSelector {
 
     export function createAxisSelector(axis:Axis, values:AxisValues):HTMLElement {
         const select:HTMLElement = document.createElement("select");
-        select.setAttribute("id", "select_" + axis);
-        select.setAttribute("name", "select_" + axis);
+        select.setAttribute("id", `select_${axis}`);
+        select.setAttribute("name", `select_${axis}`);
         select.setAttribute("class", "axis_selector");
 
         const options:DocumentFragment = document.createDocumentFragment();
@@ -26,18 +26,17 @@ namespace AxisSelector {
         return select;
     }
 
-    export function addAxisChangeListener():void {
-        for (const axisSelector:HTMLElement of document.getElementsByClassName("axis_selector")) {
-            axisSelector.addEventListener("change", () => getAxisValue(Axis.X), getAxisValue(Axis.Y));
-        }
+    export function getAxisValue(axis:Axis):string {
+        return document.getElementById(`select_${axis}`).value;
     }
 
-    export function getAxisValue(axis:Axis):string {
-        return document.getElementById("select_" + axis).value;
+    export function getAxisValues():AxisValues {
+        return new AxisValues(getAxisValue(Axis.X), getAxisValue(Axis.Y),
+        );
     }
 
     export function setAxisValues(values:AxisValues):void {
-        document.getElementById("select_x").value = values.x;
-        document.getElementById("select_y").value = values.y;
+        document.getElementById("select_x").value = values.getValue(Axis.X);
+        document.getElementById("select_y").value = values.getValue(Axis.Y);
     }
 }

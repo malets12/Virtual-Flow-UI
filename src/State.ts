@@ -9,8 +9,8 @@ namespace State {
     export const SLIDERS_STATE:Snapshot = new Snapshot();
 
     export class AxisValues {
-        readonly x: string;
-        readonly y: string;
+        private readonly x: string;
+        private readonly y: string;
 
         constructor(x: string = "MW", y: string = "SlogP") {
             if (x === y) {
@@ -58,6 +58,10 @@ namespace State {
 
         matches(int: number): boolean {
             return int >= limits.min && int < limits.max;
+        }
+
+        areEqual():boolean {
+            return this.min === this.max;
         }
     }
 
@@ -140,7 +144,7 @@ namespace Calculation {
 
     export const CALC_RESULT:CalculationResult = new CalculationResult();
 
-    class CalculationResult {
+    export class CalculationResult {
         private readonly calcResults:Array<CalculationResult>;
         private _finalResult:CalculationResult;
 
