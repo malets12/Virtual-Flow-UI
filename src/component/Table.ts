@@ -8,8 +8,8 @@ namespace Table {
     import Axis = Constant.Axis;
 
     export function renderTable(axis:AxisValues):HTMLElement {
-        const x_axis:string = axis.x;
-        const y_axis:string = axis.y;
+        const x_axis:string = axis.getValue(Axis.X);
+        const y_axis:string = axis.getValue(Axis.Y);
         const select_x:HTMLElement = createAxisSelector(Axis.X, axis);
         const select_y:HTMLElement = createAxisSelector(Axis.Y, axis);
         //Create table
@@ -59,46 +59,77 @@ namespace Table {
                 if (i === 0 && k > 0) {
                     //First row
                     cell.setAttribute("class", "axis cell frame unselected");
-                    if (KEY.dimensionsWithZero.has(x_axis)) cell.setAttribute("id", x_keys[k - 1] + "1");
-                    else cell.setAttribute("id", x_keys[k] + "1");
+                    if (KEY.dimensionsWithZero.has(x_axis)) {
+                        cell.setAttribute("id", x_keys[k - 1] + "1");
+                    } else {
+                        cell.setAttribute("id", x_keys[k] + "1");
+                    }
                     if (k === x_length) {
                         cell.setAttribute("id", "01");
                         cell.innerHTML = "Row sums:";
-                    } else if (KEY.dimensionsWithZero.has(x_axis) && (k === 1 || x_axis === "EnamineCC")) cell.innerHTML = x_map.get(x_keys[k - 1]);
-                    else if (KEY.dimensionsWithZero.has(x_axis)) cell.innerHTML = x_map.get(x_keys[k - 2]) + " - " + x_map.get(x_keys[k - 1]);
-                    else cell.innerHTML = x_map.get(x_keys[k - 1]) + " - " + x_map.get(x_keys[k]);
+                    } else if (KEY.dimensionsWithZero.has(x_axis) && (k === 1 || x_axis === "EnamineCC")) {
+                        cell.innerHTML = x_map.get(x_keys[k - 1]);
+                    }
+                    else if (KEY.dimensionsWithZero.has(x_axis)) {
+                        cell.innerHTML = x_map.get(x_keys[k - 2]) + " - " + x_map.get(x_keys[k - 1]);
+                    }
+                    else {
+                        cell.innerHTML = x_map.get(x_keys[k - 1]) + " - " + x_map.get(x_keys[k]);
+                    }
                 } else {
                     if (i > 0 && k === 0) {
                         //First column
                         cell.setAttribute("class", "axis cell frame unselected");
-                        if (KEY.dimensionsWithZero.has(y_axis)) cell.setAttribute("id", "1" + y_keys[i - 1]);
-                        else cell.setAttribute("id", "1" + y_keys[i]);
+                        if (KEY.dimensionsWithZero.has(y_axis)) {
+                            cell.setAttribute("id", "1" + y_keys[i - 1]);
+                        } else {
+                            cell.setAttribute("id", "1" + y_keys[i]);
+                        }
                         if (i === y_length) {
                             cell.setAttribute("id", "10");
                             cell.innerHTML = "Column sums:";
-                        } else if (KEY.dimensionsWithZero.has(y_axis) && (i === 1 || y_axis === "EnamineCC")) cell.innerHTML = y_map.get(y_keys[i - 1]);
-                        else if (KEY.dimensionsWithZero.has(y_axis)) cell.innerHTML = y_map.get(y_keys[i - 2]) + " - " + y_map.get(y_keys[i - 1]);
-                        else cell.innerHTML = y_map.get(y_keys[i - 1]) + " - " + y_map.get(y_keys[i]);
+                        } else if (KEY.dimensionsWithZero.has(y_axis) && (i === 1 || y_axis === "EnamineCC")) {
+                            cell.innerHTML = y_map.get(y_keys[i - 1]);
+                        } else if (KEY.dimensionsWithZero.has(y_axis)) {
+                            cell.innerHTML = y_map.get(y_keys[i - 2]) + " - " + y_map.get(y_keys[i - 1]);
+                        } else {
+                            cell.innerHTML = y_map.get(y_keys[i - 1]) + " - " + y_map.get(y_keys[i]);
+                        }
                     } else {
                         //First cell
-                        if (i === 0 && k === 0) cell.setAttribute("class", "cell frame unselected");
+                        if (i === 0 && k === 0) {
+                            cell.setAttribute("class", "cell frame unselected");
+                        }
                         else {
                             //Last cell
-                            if (i === y_length && k === x_length) cell.setAttribute("class", "cell frame unselected");
+                            if (i === y_length && k === x_length) {
+                                cell.setAttribute("class", "cell frame unselected");
+                            }
                             else {
                                 if (k === x_length) { //Rows sums
-                                    if (KEY.dimensionsWithZero.has(y_axis)) cell.setAttribute("id", "0" + y_keys[i - 1]);
-                                    else cell.setAttribute("id", "0" + y_keys[i]);
+                                    if (KEY.dimensionsWithZero.has(y_axis)) {
+                                        cell.setAttribute("id", "0" + y_keys[i - 1]);
+                                    } else {
+                                        cell.setAttribute("id", "0" + y_keys[i]);
+                                    }
                                 } else if (i === y_length) { //Column sums
-                                    if (KEY.dimensionsWithZero.has(x_axis)) cell.setAttribute("id", x_keys[k - 1] + "0");
-                                    else cell.setAttribute("id", x_keys[k] + "0");
+                                    if (KEY.dimensionsWithZero.has(x_axis)) {
+                                        cell.setAttribute("id", x_keys[k - 1] + "0");
+                                    } else {
+                                        cell.setAttribute("id", x_keys[k] + "0");
+                                    }
                                 } else {
                                     //Plain cell
                                     cell.setAttribute("class", "cell unselected field");
-                                    if (KEY.dimensionsWithZero.has(x_axis) && KEY.dimensionsWithZero.has(y_axis)) cell.setAttribute("id", x_keys[k - 1] + y_keys[i - 1]);
-                                    else if (KEY.dimensionsWithZero.has(x_axis)) cell.setAttribute("id", x_keys[k - 1] + y_keys[i]);
-                                    else if (KEY.dimensionsWithZero.has(y_axis)) cell.setAttribute("id", x_keys[k] + y_keys[i - 1]);
-                                    else cell.setAttribute("id", x_keys[k] + y_keys[i]);
+                                    if (KEY.dimensionsWithZero.has(x_axis) && KEY.dimensionsWithZero.has(y_axis)) {
+                                        cell.setAttribute("id", x_keys[k - 1] + y_keys[i - 1]);
+                                    } else if (KEY.dimensionsWithZero.has(x_axis)) {
+                                        cell.setAttribute("id", x_keys[k - 1] + y_keys[i]);
+                                    } else if (KEY.dimensionsWithZero.has(y_axis)) {
+                                        cell.setAttribute("id", x_keys[k] + y_keys[i - 1]);
+                                    } else {
+                                        cell.setAttribute("id", x_keys[k] + y_keys[i]);
+                                    }
                                     cell.setAttribute("num", "0");
                                 }
                                 cell.innerHTML = "0";
@@ -115,7 +146,7 @@ namespace Table {
         return table;
     }
 
-    function get_axis_length(param):number {
-        return KEY.map.get(param).size;
+    function get_axis_length(dimension:string):number {
+        return KEY.map.get(dimension).size;
     }
 }

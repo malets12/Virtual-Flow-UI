@@ -1,5 +1,6 @@
 import {Constant} from "./Constant.ts";
 import {KEY} from "./data/mapping/key.ts";
+import {getRange} from "./component/Slider.ts";
 
 namespace State {
     import Counter = Constant.Counter;
@@ -48,8 +49,12 @@ namespace State {
             this.max = max;
         }
 
+        isNotValid():boolean {
+            return this.min > this.max;
+        }
+
         getValidated(): Limits {
-            if (this.min > this.max) {
+            if (this.isNotValid()) {
                 return new Limits(this.max, this.min);
             } else {
                 return this;
@@ -130,11 +135,7 @@ namespace State {
             const snapshot: Map<string, Limits> = new Map();
             Array.from(KEY.map.keys())
                 .filter(key => full || (key !== axis.x && key !== axis.y))
-                .forEach(dimension =>
-                    snapshot.set(dimension, new Limits(
-                        parseInt(document.getElementById(dimension + "_min").value),
-                        parseInt(document.getElementById(dimension + "_max").value)
-                    ).getValidated()));
+                .forEach(dimension => snapshot.set(dimension, getRange(dimension).getValidated()));
             return snapshot;
         }
     }

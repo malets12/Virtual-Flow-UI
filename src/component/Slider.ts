@@ -3,6 +3,8 @@ import {DESCRIPTION} from "../data/mapping/description.ts";
 import {Constant} from "../Constant.ts";
 import State from "../State.ts";
 import Calculation from "../State.ts";
+import Wrapper from "./Wrapper.ts";
+import AxisSelector from "./AxisSelector.ts";
 
 namespace Slider {
     import FIRST_COLUMN_SLIDERS = Constant.FIRST_COLUMN_SLIDERS;
@@ -10,6 +12,11 @@ namespace Slider {
     import Axis = Constant.Axis;
     import AxisValues = State.AxisValues;
     import CALC_RESULT = Calculation.CALC_RESULT;
+    import Limits = State.Limits;
+    import addSumWrappers = Wrapper.addSumWrappers;
+    import Counter = Constant.Counter;
+    import TOTALS = State.TOTALS;
+    import getAxisValues = AxisSelector.getAxisValues;
 
     export function renderControls():void {
         const column0:HTMLElement = document.getElementById("controls_0");
@@ -56,47 +63,51 @@ namespace Slider {
                 && slider.firstElementChild.id !== axisValues.getValue(Axis.Y))
             .forEach(slider => Array.from(slider.querySelectorAll("input"))
                 .forEach(input => {
-                    ["mouseup"].forEach(ev => input.addEventListener(ev, (evt) => sliderEvent(input, evt, true)));
-                    ["input", "change"].forEach(ev => input.addEventListener(ev, (evt) => sliderEvent(input, evt, false)));
+                    ["mouseup"].forEach(ev => input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, true)));
+                    ["input", "change"].forEach(ev => input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, false)));
                 }));
-        [axisValues.getValue(Axis.X), axisValues.getValue(Axis.Y)]
-            .map(id => document.getElementById(id).parentNode)
-            .forEach(slider => Array.from(slider.querySelectorAll("input")).forEach(input =>
-                ["input", "change"].forEach(ev => input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, true)))));
+        for (const dimension:string of [axisValues.getValue(Axis.X), axisValues.getValue(Axis.Y)]) {
+            for (const slider:HTMLElement of [getAxisMinSlider(dimension), getAxisMaxSlider(dimension)]) {
+                for (const eventName:string of ["input", "change"]) {
+                    slider.addEventListener(eventName, (evt: Event) => sliderEvent(input, evt, true));
+                }
+            }
+        }
     }
 
     function sliderEvent(input:HTMLElement, evt:Event, withNarrow:boolean):void {
-        const sliders = input.parentNode.querySelectorAll("input");
         const labelNode = input.parentNode.querySelector(".slider_name");
         const dimension:string = labelNode.id;
-        let slider1:number = parseInt(sliders[0].value);
-        let slider2:number = parseInt(sliders[1].value);
-        if (slider1 === slider2) {
+        let range:Limits = getRange(dimension);
+        if (range.areEqual()) {
             //Limit sliders
-            const max:HTMLElement = document.getElementById(`${dimension}_max`); //TODO refactor
-            const min:HTMLElement = document.getElementById(`${dimension}_min`);
-            if(!KEY.dimensionsWithZero.has(dimension) && max.value === min.value) {
-                if (max.max === max.value) {
-                    min.value = max.max - 1;
+            const maxSlider:HTMLElement = getAxisMaxSlider(dimension);
+            const minSlider:HTMLElement = getAxisMinSlider(dimension);
+            if(!KEY.dimensionsWithZero.has(dimension)) {
+                if (maxSlider.max === maxSlider.value) {
+                    minSlider.value = maxSlider.max - 1;
                 } else {
-                    max.value = min.value + 1;
+                    maxSlider.value = minSlider.value + 1;
                 }
             }
-            slider1 = parseInt(sliders[0].value);
-            slider2 = parseInt(sliders[1].value);
+            range = getRange(dimension);
         }
-        if (slider1 > slider2) {
-            [slider2, slider1] = [slider1, slider2];
-            sliders[0].value = String(slider1);
-            sliders[1].value = String(slider2);
+        if (range.isNotValid()) {
+            range = range.getValidated();
+            getAxisMinSlider(dimension).value = String(range.min);
+            getAxisMaxSlider(dimension).value = String(range.max);
         }
         //Bold for selected
-        const range_names:HTMLCollection = Array.from(document.getElementById(`${dimension}_values`).children);
-        range_names.forEach(el => el.classList.remove("highlighted"));
-        [range_names[slider1 - 1], range_names[slider2 - 1]].forEach(el => el.classList.add("highlighted"));
+        const rangeNames:HTMLCollection = Array.from(document.getElementById(`${dimension}_values`).children);
+        for (const element:HTMLElement of rangeNames) {
+            element.classList.remove("highlighted")
+        }
+        for (const element:HTMLElement of [rangeNames[range.min - 1], rangeNames[range.max - 1]]) {
+            element.classList.add("highlighted")
+        }
         //Render values above
         const values:ReadonlyArray<string> = Array.from(KEY.map.get(dimension).values());
-        labelNode.innerHTML = `${DESCRIPTION.map.get(dimension)}: <span>${values[slider1 - 1]} to ${values[slider2 - 1]}</span>`;
+        labelNode.innerHTML = `${DESCRIPTION.map.get(dimension)}: <span>${values[range.min - 1]} to ${values[range.max - 1]}</span>`;
         if (withNarrow) {
             narrow(dimension);
         }
@@ -109,8 +120,8 @@ namespace Slider {
         let tranchesSum:number = 0;
         const lettersX:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Axis.X));
         const lettersY:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Axis.Y));
-        const rangeX:Limits = getAxisSliderLimits(axisValues.getValue(Axis.X));
-        const rangeY:Limits = getAxisSliderLimits(axisValues.getValue(Axis.Y));
+        const rangeX:Limits = getAxisSliderRange(axisValues.getValue(Axis.X));
+        const rangeY:Limits = getAxisSliderRange(axisValues.getValue(Axis.Y));
         if (!rangeX.areEqual() && !rangeY.areEqual()) {
             const x_finals:Array<string> = [];
             const y_finals:Array<string> = [];
@@ -182,15 +193,6 @@ namespace Slider {
         addSumWrappers();
     }
 
-    function getAxisSliderLimits(dimension:string):Limits {
-        return new Limits(
-            document.getElementById(`${dimension}_min`).value - 1,
-            KEY.dimensionsWithZero.has(dimension)
-                ? document.getElementById(`${dimension}_max`).value
-                : document.getElementById(`${dimension}_max`).value - 1
-        ).getValidated();
-    }
-
     function getAxisLetters(dimension:string):ReadonlyArray<string> {
         const letters:Array<string> = Array.from(KEY.map.get(dimension).keys());
         if (!KEY.dimensionsWithZero.has(dimension)) {
@@ -214,5 +216,32 @@ namespace Slider {
         const cell:HTMLElement = document.getElementById(id);
         cell.classList.remove("unselected");
         cell.classList.add("selected", "selected" + position);
+    }
+
+    function getAxisSliderRange(dimension:string):Limits {
+        return new Limits(
+            getRangeMin(dimension) - 1,
+            KEY.dimensionsWithZero.has(dimension) ? getRangeMax(dimension) : getRangeMin(dimension) - 1
+        ).getValidated();
+    }
+
+    export function getRange(dimension:string):Limits {
+        return new Limits(getRangeMin(dimension), getRangeMax(dimension));
+    }
+
+    function getRangeMin(dimension:string):number {
+        return parseInt(getAxisSliderRange(dimension).value);
+    }
+
+    function getRangeMax(dimension:string):number {
+        return parseInt(getAxisMaxSlider(dimension).value);
+    }
+
+    function getAxisMinSlider(dimension:string):HTMLElement {
+        return document.getElementById(`${dimension}_min`);
+    }
+
+    function getAxisMaxSlider(dimension:string):HTMLElement {
+        return document.getElementById(`${dimension}_max`);
     }
 }

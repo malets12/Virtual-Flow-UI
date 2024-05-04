@@ -163,24 +163,20 @@ function fillCells(results:CalculationResult):void {
         TOTALS.setMax(Counter.TRANCHES, results.totalTranches);
     }
     fillCellsWithRowAndColumnSums(results);
-    //Coloring and abbr
-    const colorsMap:ReadonlyMap<string, string> = COLOR.map; //TODO refactor
-    const limits = Array.from(colorsMap.keys());
-    limits.push(Infinity);
-    for (const cell:HTMLElement of document.getElementsByClassName("not_zero")) {
-        for (let color:string of colorsMap.values()) {
-            cell.classList.remove(color)
-        }
-        const num:number = parseInt(cell.getAttribute("num"));
-        for (let i:number = 0; i < limits.length; i++) {
-            if (num > limits[i] && num < limits[i + 1]) {
-                cell.classList.add(colorsMap.get(limits[i]));
-                break;
-            }
-        }
-    }
     narrow(getAxisValue(Axis.X));
     document.dispatchEvent(new Event(EventName.CALCULATION_DONE));
+}
+
+function addColour(cell:HTMLElement, num:number):void {
+    for (const color:string of COLOR.map.values()) {
+        cell.classList.remove(color);
+    }
+    for (let i:number = 0; i < COLOR.limits.length; i++) {
+        if (num > COLOR.limits[i] && num < COLOR.limits[i + 1]) {
+            cell.classList.add(COLOR.map.get(COLOR.limits[i]));
+            break;
+        }
+    }
 }
 
 function fillCellsWithRowAndColumnSums(results:CalculationResult):void {
@@ -200,6 +196,7 @@ function fillCellsWithRowAndColumnSums(results:CalculationResult):void {
         cell.classList.add("not_zero");
         cell.setAttribute("num", num);
         cell.textContent = abbrN(num);
+        addColour(cell, num);
     }
     for (const [id, sum] of summaryMap) {
         const cell:HTMLElement = document.getElementById(id);
