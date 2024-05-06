@@ -2,21 +2,19 @@ import {KEY} from "../data/mapping/key.ts";
 import {DESCRIPTION} from "../data/mapping/description.ts";
 import {Constant} from "../Constant.ts";
 import State from "../State.ts";
-import Calculation from "../State.ts";
-import Wrapper from "./Wrapper.ts";
 import AxisSelector from "./AxisSelector.ts";
+import Wrapper from "./Wrapper.ts";
 
 namespace Slider {
     import FIRST_COLUMN_SLIDERS = Constant.FIRST_COLUMN_SLIDERS;
     import sliderNameToPoints = Constant.sliderNameToPoints;
     import Axis = Constant.Axis;
     import AxisValues = State.AxisValues;
-    import CALC_RESULT = Calculation.CALC_RESULT;
     import Limits = State.Limits;
-    import addSumWrappers = Wrapper.addSumWrappers;
-    import Counter = Constant.Counter;
-    import TOTALS = State.TOTALS;
     import getAxisValues = AxisSelector.getAxisValues;
+    import TOTALS = State.TOTALS;
+    import Counter = Constant.Counter;
+    import addSumWrappers = Wrapper.addSumWrappers;
 
     export function renderControls():void {
         const column0:HTMLElement = document.getElementById("controls_0");
@@ -76,7 +74,7 @@ namespace Slider {
     }
 
     function sliderEvent(input:HTMLElement, evt:Event, withNarrow:boolean):void {
-        const labelNode = input.parentNode.querySelector(".slider_name");
+        const labelNode:HTMLElement = input.parentNode.querySelector(".slider_name");
         const dimension:string = labelNode.id;
         let range:Limits = getRange(dimension);
         if (range.areEqual()) {
@@ -115,7 +113,7 @@ namespace Slider {
 
     export function narrow(name:string, withForce:boolean = false):void {
         const axisValues:AxisValues = getAxisValues();
-        const isAxis:boolean = name === axisValues.x || name === axisValues.y;
+        const isAxis:boolean = name === axisValues.getValue(Axis.X) || name === axisValues.getValue(Axis.Y);
         let compoundsSum:number = 0
         let tranchesSum:number = 0;
         const lettersX:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Axis.X));
@@ -151,7 +149,7 @@ namespace Slider {
                 }
             }
             if (isAxis || withForce) {
-                const selection:HTMLCollection<HTMLElement> = document.getElementsByClassName("selected");
+                const selection:HTMLCollection = document.getElementsByClassName("selected");
                 if (selection.length > 0) {
                     for (const cell:HTMLElement of selection) {
                         cell.classList.remove("selected", "selectedRight", "selectedLeft", "selectedTop", "selectedBottom");
@@ -196,7 +194,7 @@ namespace Slider {
     function getAxisLetters(dimension:string):ReadonlyArray<string> {
         const letters:Array<string> = Array.from(KEY.map.get(dimension).keys());
         if (!KEY.dimensionsWithZero.has(dimension)) {
-            lettersX.shift(); //remove artificial limit
+            letters.shift(); //remove artificial limit
         }
         return letters;
     }
@@ -230,18 +228,18 @@ namespace Slider {
     }
 
     function getRangeMin(dimension:string):number {
-        return parseInt(getAxisSliderRange(dimension).value);
+        return parseInt(getAxisMinSlider(dimension).value);
     }
 
     function getRangeMax(dimension:string):number {
         return parseInt(getAxisMaxSlider(dimension).value);
     }
 
-    function getAxisMinSlider(dimension:string):HTMLElement {
-        return document.getElementById(`${dimension}_min`);
+    function getAxisMinSlider(dimension:string):HTMLInputElement {
+        return <HTMLInputElement>document.getElementById(`${dimension}_min`);
     }
 
-    function getAxisMaxSlider(dimension:string):HTMLElement {
-        return document.getElementById(`${dimension}_max`);
+    function getAxisMaxSlider(dimension:string):HTMLInputElement {
+        return <HTMLInputElement>document.getElementById(`${dimension}_max`);
     }
 }

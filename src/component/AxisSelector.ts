@@ -27,16 +27,22 @@ namespace AxisSelector {
     }
 
     export function getAxisValue(axis:Axis):string {
-        return document.getElementById(`select_${axis}`).value;
+        const select:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById(`select_${axis}`);
+        return select !== null ? select.value : "";
     }
 
     export function getAxisValues():AxisValues {
-        return new AxisValues(getAxisValue(Axis.X), getAxisValue(Axis.Y),
-        );
+        return new AxisValues(getAxisValue(Axis.X), getAxisValue(Axis.Y));
     }
 
     export function setAxisValues(values:AxisValues):void {
-        document.getElementById("select_x").value = values.getValue(Axis.X);
-        document.getElementById("select_y").value = values.getValue(Axis.Y);
+        const selectX:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById("select_x");
+        if (selectX !== null) {
+            selectX.value = values.getValue(Axis.X);
+        }
+        const selectY:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById("select_y");
+        if (selectY !== null) {
+            selectY.value = values.getValue(Axis.X);
+        }
     }
 }

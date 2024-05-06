@@ -8,7 +8,7 @@ namespace Message {
     import Source = Constant.Source;
     import CalculationResult = Calculation.CalculationResult;
 
-    private abstract class ActionMessage {
+    abstract class ActionMessage {
         readonly action: WorkerAction;
 
         protected constructor(action: WorkerAction) {

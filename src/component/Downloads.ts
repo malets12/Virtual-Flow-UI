@@ -2,11 +2,13 @@ import {Download, DownloadTemplateMapping, DownloadURL} from "../data/mapping/do
 import {replaceAll} from "../Utils.ts";
 import {KEY} from "../data/mapping/key.ts";
 import {ORDER} from "../data/mapping/order.ts";
-import State, {SLIDERS_STATE} from "../State.ts";
+import State from "../State.ts";
+import Calculation from "../State.ts";
 
 namespace Downloads {
-    import CALC_RESULT = Calculation.CALC_RESULT;
     import AxisValues = State.AxisValues;
+    import SLIDERS_STATE = State.SLIDERS_STATE;
+    import CALC_RESULT = Calculation.CALC_RESULT;
 
     export function renderDownloads():void {
         const downloadsContainer:HTMLElement = document.createElement("div");
@@ -32,7 +34,8 @@ namespace Downloads {
         document.getElementById("DSubmit").addEventListener("click", ():void => {
             const d_root:string = DownloadURL.root;
             //Find selected tranches
-            const method:string = document.getElementById("DMethod").value;
+            const methodSelector:HTMLInputElement = <HTMLInputElement>document.getElementById("DMethod");
+            const method:string = methodSelector.value;
             const str:string = Download[method].tool;
             const ext:string = Download[method].extension;
             switch (method) {
@@ -62,7 +65,7 @@ namespace Downloads {
     function createFile(arr:Array<string>, filename:string):void {
         arr.push(""); //Add last line
         const file:Blob = new Blob([arr.join("\n")], {type: "text/plain"});
-        const a:HTMLElement = document.createElement("a");
+        const a:HTMLAnchorElement = document.createElement("a");
         const url:string = URL.createObjectURL(file);
         a.href = url;
         a.download = filename;
@@ -74,7 +77,7 @@ namespace Downloads {
         }, 0);
     }
 
-    function makeRegexp():readonly [string, string] {
+    function makeRegexp():[string, string] {
         SLIDERS_STATE.saveNew(new AxisValues(), true);
         const result:Array<Array<string>> = [];
         ORDER.map.forEach(() => result.push([]));
@@ -97,8 +100,8 @@ namespace Downloads {
     function findInbox():ReadonlyArray<string> {
         return Array.from(document.getElementsByClassName("inbox"))
             .map(cell => cell.id)
-            .filter(id => CALC_RESULT.finalResult().cellToTranches().has(id))
-            .map(id => CALC_RESULT.finalResult().cellToTranches().get(id))
+            .filter(id => CALC_RESULT.finalResult.cellToTranches.has(id))
+            .map(id => CALC_RESULT.finalResult.cellToTranches.get(id))
             .reduce((arr1, arr2) => [...arr1, ...arr2]);
     }
 

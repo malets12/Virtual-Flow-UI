@@ -1,7 +1,8 @@
-import {Database} from "../Enum.ts";
+import {Constant} from "../Constant.ts";
+import Database = Constant.Database;
 import Message from "./infrastructure/Message.ts";
-import SaveMessage = Message.SaveMessage;
 import LoadCompleteMessage = Message.LoadCompleteMessage;
+import SaveMessage = Message.SaveMessage;
 
 self.addEventListener("message", async (msg:any):Promise<void> => {
 	const req:IDBOpenDBRequest = indexedDB.open(Database.NAME, Database.VERSION);

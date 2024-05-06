@@ -1,18 +1,19 @@
 import LocalStorage from "../Utils.ts";
-import Message from "./infrastructure/Message.ts";
+import Message, {CalculationRequestMessage, LoadRequestMessage} from "./infrastructure/Message.ts";
 import {WORKER_COUNT} from "../Constant.ts";
+import JSWorkerFactory from "./WorkerFactory.ts";
 
-namespace WorkerPool {
+namespace Pool {
     import newNetworkLoader = JSWorkerFactory.newNetworkLoader;
     import newDatabaseLoader = JSWorkerFactory.newDatabaseLoader;
     import hasLocalCopy = LocalStorage.hasLocalCopy;
-
+    import NamedWorker = JSWorkerFactory.NamedWorker;
     export const WORKER_POOL:WorkerPool = new WorkerPool();
     export const WORK_QUEUE:WorkQueue = new WorkQueue();
 
 
     class WorkerPool {
-        private readonly workers:ReadonlyMap<string, Worker>;
+        private readonly workers:Map<string, Worker>;
 
         constructor() {
             this.workers = new Map();
@@ -24,19 +25,22 @@ namespace WorkerPool {
                 (loadFromDB ? newDatabaseLoader(callback, i) : newNetworkLoader(callback, i))
                     .then(namedWorker => {
                         this.workers.set(namedWorker.name, namedWorker.worker);
-                        worker.postMessage(WORK_QUEUE.pop())
+                        namedWorker.postMessage(WORK_QUEUE.pop())
                     });
             }
         }
 
         async takeNext(worker:string):Promise<void> {
-            if (WORK_QUEUE.hasMessage()) {
-                return WORK_QUEUE.pop()
-                    .then(msg => this.workers.get(worker).postMessage(msg));
-            }
+            return Promise.resolve(WORK_QUEUE.hasMessage())
+                .then(has => {
+                    if (has) {
+                        WORK_QUEUE.pop()
+                            .then(msg => this.workers.get(worker).postMessage(msg));
+                    }
+                });
         }
 
-        async notifyAll(message:CalculationRequest):Promise<void> {
+        async notifyAll(message:CalculationRequestMessage):Promise<void> {
             for (const worker:Worker of this.workers.values()) {
                 worker.postMessage(message);
             }
@@ -44,17 +48,17 @@ namespace WorkerPool {
     }
 
     class WorkQueue {
-        private readonly queue:Array<LoadMessage>;
+        private readonly queue:Array<LoadRequestMessage>;
 
         constructor() {
             this.queue = [];
         }
 
-        async pop():Promise<LoadMessage> {
+        async pop():Promise<LoadRequestMessage> {
             return this.queue.pop();
         }
 
-        async push(message:LoadMessage):Promise<void> {
+        async push(message:LoadRequestMessage):Promise<void> {
             this.queue.push(message);
         }
 
@@ -66,11 +70,10 @@ namespace WorkerPool {
 }
 
 namespace Saver {
-    import markHasLocalCopy = LocalStorage.markHasLocalCopy;
-    import SaveMessage = Message.SaveMessage;
-    import newDatabaseSaver = JSWorkerFactory.newDatabaseSaver;
     import LoadCompleteMessage = Message.LoadCompleteMessage;
-
+    import newDatabaseSaver = JSWorkerFactory.newDatabaseSaver;
+    import SaveMessage = Message.SaveMessage;
+    import markHasLocalCopy = LocalStorage.markHasLocalCopy;
     export const SAVER = new Saver();
 
     class Saver {

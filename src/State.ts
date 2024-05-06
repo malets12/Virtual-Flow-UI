@@ -1,10 +1,11 @@
 import {Constant} from "./Constant.ts";
 import {KEY} from "./data/mapping/key.ts";
-import {getRange} from "./component/Slider.ts";
+import Slider from "./component/Slider.ts";
 
 namespace State {
     import Counter = Constant.Counter;
     import Axis = Constant.Axis;
+    import getRange = Slider.getRange;
 
     export const TOTALS:Totals = new Totals();
     export const SLIDERS_STATE:Snapshot = new Snapshot();
@@ -62,7 +63,7 @@ namespace State {
         }
 
         matches(int: number): boolean {
-            return int >= limits.min && int < limits.max;
+            return int >= this.min && int < this.max;
         }
 
         areEqual():boolean {
@@ -122,7 +123,7 @@ namespace State {
 
         isNeedRecalculation(axis:AxisValues):boolean {
             const current:ReadonlyMap<string, Limits> = this.currentState(axis);
-            for (let [key, val] of this._map) {
+            for (const [key, val] of this._map) {
                 const currentVal:Limits = current.get(key);
                 if (currentVal.min !== val.min || currentVal.max !== val.max) {
                     return true;
@@ -134,7 +135,7 @@ namespace State {
         private currentState(axis: AxisValues, full: boolean = false):ReadonlyMap<string, Limits> {
             const snapshot: Map<string, Limits> = new Map();
             Array.from(KEY.map.keys())
-                .filter(key => full || (key !== axis.x && key !== axis.y))
+                .filter(key => full || (key !== axis.getValue(Axis.X) && key !== axis.getValue(Axis.Y)))
                 .forEach(dimension => snapshot.set(dimension, getRange(dimension).getValidated()));
             return snapshot;
         }
@@ -143,14 +144,13 @@ namespace State {
 
 namespace Calculation {
 
-    export const CALC_RESULT:CalculationResult = new CalculationResult();
+    export const CALC_RESULT:CalculationResultHolder = new CalculationResultHolder();
 
-    export class CalculationResult {
+    export class CalculationResultHolder {
         private readonly calcResults:Array<CalculationResult>;
-        private _finalResult:CalculationResult;
+        private _finalResult?:CalculationResult;
 
         constructor() {
-            this.result = new CalculationResult();
             this.calcResults = [];
         }
 
@@ -191,7 +191,7 @@ namespace Calculation {
         }
 
         merge(other:CalculationResult):CalculationResult {
-            for (const [key, val] of other.cellCounts()) {
+            for (const [key, val] of other.cellCounts) {
                 const cellCountsValue:number|undefined = this._cellCounts.get(key);
                 if (cellCountsValue === undefined) {
                     this._cellCounts.set(key, val);
@@ -199,7 +199,7 @@ namespace Calculation {
                     this._cellCounts.set(key, cellCountsValue + val);
                 }
             }
-            for (const [key, val] of other.cellToTranches()) {
+            for (const [key, val] of other.cellToTranches) {
                 const tranchesArray:Array<string>|undefined = this._cellToTranches.get(key);
                 if (tranchesArray === undefined) {
                     this._cellToTranches.set(key, val);
@@ -207,8 +207,8 @@ namespace Calculation {
                     this._cellToTranches.set(key, [...tranchesArray, ...val]);
                 }
             }
-            this._totalTranches += other.totalTranches();
-            this._totalCompounds += other.totalCompounds();
+            this._totalTranches += other.totalTranches;
+            this._totalCompounds += other.totalCompounds;
             return this;
         }
 

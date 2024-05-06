@@ -17,7 +17,7 @@ export namespace Constant {
             case "FormCharge": return [0, 76, 154, 232, 315, 396];
             case "Fsp3": return [3, 83, 158, 233, 309, 381];
             case "SlogP": return [0, 63, 130, 197, 265, 332, 400];
-            default: throw `Illegal key '${key}' !`;
+            default: throw `Illegal key '${name}' !`;
         }
     }
 

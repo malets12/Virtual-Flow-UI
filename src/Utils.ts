@@ -44,7 +44,7 @@ namespace LocalStorage {
 namespace Loader {
     const LOADER = "loader";
     export function showLoader():void {
-        document.getElementById(LOADER).style.display = null;
+        document.getElementById(LOADER).style.display = "block"; //TODO check
     }
 
     export function hideLoader():void {

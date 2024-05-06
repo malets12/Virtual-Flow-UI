@@ -12,9 +12,9 @@ import PARTS = Constant.PARTS;
 import WORKER_COUNT = Constant.WORKER_COUNT;
 import Axis = Constant.Axis;
 import EventName = Constant.EventName;
-import {WorkerPool, Saver} from "./worker/Pool.ts";
-import WORKER_POOL = WorkerPool.WORKER_POOL;
-import WORK_QUEUE = WorkerPool.WORK_QUEUE;
+import {Pool, Saver} from "./worker/Pool.ts";
+import WORKER_POOL = Pool.WORKER_POOL;
+import WORK_QUEUE = Pool.WORK_QUEUE;
 import SAVER = Saver.SAVER;
 import {Loader, LocalStorage, abbrN, doFullReload} from "./Utils.ts";
 import hideLoader = Loader.hideLoader;
@@ -68,7 +68,7 @@ import {COLOR} from "./data/mapping/color.ts";
                     }
                     render(new AxisValues());
                 } else {
-                    WORKER_POOL.takeNext(loadMessage.from);
+                    return WORKER_POOL.takeNext(loadMessage.from);
                 }
                 break;
             }
@@ -80,7 +80,7 @@ import {COLOR} from "./data/mapping/color.ts";
                 CALC_RESULT.tryMerge();
                 if (calcCounter === WORKER_COUNT) {
                     console.log("Full calculation done!");
-                    fillCells(CALC_RESULT.finalResult());
+                    fillCells(CALC_RESULT.finalResult);
                     calcCounter = 0;
                 }
                 break;
@@ -95,7 +95,7 @@ import {COLOR} from "./data/mapping/color.ts";
     let loadCounter:number = 0;
     let calcCounter:number = 0;
 
-    for (let i = 0; i < PARTS; i++) {
+    for (let i:number = 0; i < PARTS; i++) {
         WORK_QUEUE.push(new LoadRequestMessage(`tranche${i}.json`));
     }
     WORKER_POOL.init(callback);
@@ -157,12 +157,12 @@ function renderValues(axis:AxisValues, isInit:boolean = false):void {
     WORKER_POOL.notifyAll(new CalculationRequestMessage(isInit, axis, possibleValues, notSelectedDimensions));
 }
 
-function fillCells(results:CalculationResult):void {
-    if (results.totalCompounds > 0 && results.totalTranches > 0) {
-        TOTALS.setMax(Counter.COMPOUNDS, results.totalCompounds);
-        TOTALS.setMax(Counter.TRANCHES, results.totalTranches);
+function fillCells(result:CalculationResult):void {
+    if (result.totalCompounds > 0 && result.totalTranches > 0) {
+        TOTALS.setMax(Counter.COMPOUNDS, result.totalCompounds);
+        TOTALS.setMax(Counter.TRANCHES, result.totalTranches);
     }
-    fillCellsWithRowAndColumnSums(results);
+    fillCellsWithRowAndColumnSums(result);
     narrow(getAxisValue(Axis.X));
     document.dispatchEvent(new Event(EventName.CALCULATION_DONE));
 }
@@ -181,11 +181,11 @@ function addColour(cell:HTMLElement, num:number):void {
 
 function fillCellsWithRowAndColumnSums(results:CalculationResult):void {
     const summaryMap:Map<string, number> = new Map();
-    for (const [id, num] of results.cellCounts()) {
+    for (const [id, num] of results.cellCounts) {
         const columnId:string = `${id.substring(0, 1)}0`;
         const rowId:string = `0${id.substring(1, 2)}`;
         for (const element:string of [columnId, rowId]) {
-            const sum:number = summaryMap.get(element);
+            const sum:number|undefined = summaryMap.get(element);
             if (sum === undefined) {
                 summaryMap.set(element, num);
             } else {
@@ -201,7 +201,7 @@ function fillCellsWithRowAndColumnSums(results:CalculationResult):void {
     for (const [id, sum] of summaryMap) {
         const cell:HTMLElement = document.getElementById(id);
         cell.classList.add("frame", "sum");
-        cell.setAttribute("num", sum)
+        cell.setAttribute("num", String(sum));
         cell.textContent = abbrN(sum);
     }
 }

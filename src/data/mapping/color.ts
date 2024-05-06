@@ -1,8 +1,6 @@
-import {objToStrMap} from "../../Utils.ts";
-
 class Color {
-  readonly map:ReadonlyMap<string, string>;
-  readonly limits:ReadonlyArray<number>;
+  readonly map:Map<number, string>;
+  readonly limits:Array<number>;
 
   constructor() {
     const colors = {
@@ -23,10 +21,12 @@ class Color {
       20000000000: "grad14",
       50000000000: "grad15"
     };
-    this.map = objToStrMap(colors);
-    const keys = Object.keys(obj);
-    keys.push(Infinity);
-    this.limits = keys;
+    for (const [key, val] of Object.entries(colors)) {
+      const num:number = parseInt(key);
+      this.map.set(num, val);
+      this.limits.push(num);
+    }
+    this.limits.push(Infinity);
   }
 }
 
