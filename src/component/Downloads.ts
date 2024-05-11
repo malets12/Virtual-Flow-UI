@@ -11,21 +11,21 @@ namespace Downloads {
     import CALC_RESULT = Calculation.CALC_RESULT;
 
     export function renderDownloads():void {
-        const downloadsContainer:HTMLElement = document.createElement("div");
+        const downloadsContainer:HTMLDivElement = document.createElement("div");
         downloadsContainer.setAttribute("id", "download");
         downloadsContainer.setAttribute("class", "download");
         downloadsContainer.innerHTML = "<b>Download method for tranches:</b>";
-        const selector:HTMLElement = document.createElement("select");
+        const selector:HTMLSelectElement = document.createElement("select");
         selector.setAttribute("id", "DMethod");
         selector.setAttribute("name", "DMetod");
         for (const name:string of Object.keys(Download)) {
-            const option:HTMLElement = document.createElement("option");
+            const option:HTMLOptionElement = document.createElement("option");
             option.setAttribute("value", name);
             option.innerText = name;
             selector.appendChild(option);
         }
         downloadsContainer.appendChild(selector);
-        const DButton:HTMLElement = document.createElement("button");
+        const DButton:HTMLButtonElement = document.createElement("button");
         DButton.setAttribute("class", "button");
         DButton.setAttribute("id", "DSubmit");
         DButton.innerText = "Download";

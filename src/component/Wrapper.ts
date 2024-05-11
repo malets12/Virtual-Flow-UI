@@ -8,30 +8,30 @@ namespace Wrapper {
     import Limits = State.Limits;
     import Counter = Constant.Counter;
 
-    function addSum(counter:Counter, parentId:string):void {
-        const existing:HTMLElement|undefined = document.getElementById(counter);
+    function createSumHolder(counter:Counter):HTMLDivElement {
+        const existing:HTMLElement|undefined = <HTMLElement|undefined>document.getElementById(counter);
         if (existing !== undefined) {
             existing.remove();
         }
         const nodeHolder:DocumentFragment = document.createDocumentFragment();
         const pre:HTMLElement = document.createElement("b");
         const after:HTMLElement = document.createElement("b");
-        const min:HTMLElement = document.createElement("span");
-        const max:HTMLElement = document.createElement("span");
-        pre.innerHTML = counter.charAt(0).toUpperCase() + counter.slice(1) + " selected: ";
-        after.innerHTML = " from ";
+        const min:HTMLSpanElement = document.createElement("span");
+        const max:HTMLSpanElement = document.createElement("span");
+        pre.innerText = `${counter.charAt(0).toUpperCase()}${counter.slice(1)} selected: `;
+        after.innerText = " from ";
         const state:Limits = TOTALS.get(counter);
-        min.innerHTML = abbrN(state.min);
-        max.innerHTML = abbrN(state.max);
+        min.innerText = abbrN(state.min);
+        max.innerText = abbrN(state.max);
         nodeHolder.append(pre, min, after, max);
-        const node:HTMLElement = document.createElement("div");
+        const node:HTMLDivElement = document.createElement("div");
         node.setAttribute("id", counter);
         node.appendChild(nodeHolder);
-        document.getElementById(parentId).appendChild(node);
+        return node;
     }
 
     export function addSumWrappers():void {
-        addSum(Counter.COMPOUNDS, "info_0");
-        addSum(Counter.TRANCHES, "info_1");
+        document.getElementById("info_0").appendChild(createSumHolder(Counter.COMPOUNDS));
+        document.getElementById("info_1").appendChild(createSumHolder(Counter.TRANCHES));
     }
 }

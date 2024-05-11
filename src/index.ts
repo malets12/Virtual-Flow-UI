@@ -103,10 +103,10 @@ import {COLOR} from "./data/mapping/color.ts";
 
 function render(axis:AxisValues):void {
     removePrevious();
-    const table:HTMLElement = renderTable(axis);
+    const table:HTMLTableElement = renderTable(axis);
     document.getElementById("container").appendChild(table);
     //Create containers for controls and info
-    const info = createSpecialContainer("info");
+    const info:HTMLDivElement = createSpecialContainer("info");
     table.after(info);
     info.after(createSpecialContainer("controls"));
     //Call functions
@@ -214,11 +214,11 @@ function removePrevious():void {
         .forEach(element => element.remove());
 }
 
-function createSpecialContainer(name:string):HTMLElement {
-    const text:HTMLElement = document.createElement("div");
+function createSpecialContainer(name:string):HTMLDivElement {
+    const text:HTMLDivElement = document.createElement("div");
     text.setAttribute("id", `${name}_wrapper`);
     for (let i:number = 0; i < 2; i++) {
-        const col:HTMLElement = document.createElement("div");
+        const col:HTMLDivElement = document.createElement("div");
         col.setAttribute("class", `${name}_col`);
         col.setAttribute("id", `${name}_${i}`);
         text.appendChild(col);

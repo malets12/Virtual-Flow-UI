@@ -4,6 +4,7 @@ import {Constant} from "../Constant.ts";
 import State from "../State.ts";
 import AxisSelector from "./AxisSelector.ts";
 import Wrapper from "./Wrapper.ts";
+import Calculation from "../State.ts";
 
 namespace Slider {
     import FIRST_COLUMN_SLIDERS = Constant.FIRST_COLUMN_SLIDERS;
@@ -15,19 +16,20 @@ namespace Slider {
     import TOTALS = State.TOTALS;
     import Counter = Constant.Counter;
     import addSumWrappers = Wrapper.addSumWrappers;
+    import CALC_RESULT = Calculation.CALC_RESULT;
 
     export function renderControls():void {
         const column0:HTMLElement = document.getElementById("controls_0");
         const column1:HTMLElement = document.getElementById("controls_1");
         for (const dimension:string of KEY.map.keys()) {
-            const datalist:HTMLElement = document.createElement("div");
+            const datalist:HTMLDivElement = document.createElement("div");
             const listHolder:DocumentFragment = document.createDocumentFragment();
             const sliderValues:ReadonlyArray<string> = Array.from(KEY.map.get(dimension).values());
             const length:number = sliderValues.length;
             datalist.setAttribute("class", "slider_label");
             datalist.setAttribute("id", `${dimension}_values`);
             for (let k:number = 0; k < length; k++) {
-                const option:HTMLElement = document.createElement("span");
+                const option:HTMLSpanElement = document.createElement("span");
                 option.innerHTML = sliderValues[k];
                 option.style.insetInlineStart = `${sliderNameToPoints(dimension)[k]}px`;
                 if (k === 0 || k === length - 1) {
@@ -36,16 +38,16 @@ namespace Slider {
                 listHolder.appendChild(option);
             }
             datalist.appendChild(listHolder);
-            const label:HTMLElement = document.createElement("label");
+            const label:HTMLLabelElement = document.createElement("label");
             label.setAttribute("class", "slider_name");
             label.setAttribute("id", dimension);
             //
             label.innerHTML = `${DESCRIPTION.map.get(dimension)}: <span>${sliderValues[0]} to ${sliderValues[length - 1]}</span>`;
-            const container:HTMLElement = document.createElement("div");
+            const container:HTMLDivElement = document.createElement("div");
             container.setAttribute("class", "slider");
             container.appendChild(label);
-            createRangeInput(`${dimension}_min`, container, 1, length);
-            createRangeInput(`${dimension}_max`, container, length, length);
+            container.appendChild(createRangeInput(`${dimension}_min`, 1, length));
+            container.appendChild(createRangeInput(`${dimension}_max`, length, length));
             if (FIRST_COLUMN_SLIDERS.includes(dimension)) {
                 column0.appendChild(container);
             } else {
@@ -55,7 +57,7 @@ namespace Slider {
         }
     }
 
-    export function addSliderEvents(axisValues:AxisValues): void {
+    export function addSliderEvents(axisValues:AxisValues):void {
         Array.from(document.getElementsByClassName("slider"))
             .filter(slider => slider.firstElementChild.id !== axisValues.getValue(Axis.X)
                 && slider.firstElementChild.id !== axisValues.getValue(Axis.Y))
@@ -67,7 +69,7 @@ namespace Slider {
         for (const dimension:string of [axisValues.getValue(Axis.X), axisValues.getValue(Axis.Y)]) {
             for (const slider:HTMLElement of [getAxisMinSlider(dimension), getAxisMaxSlider(dimension)]) {
                 for (const eventName:string of ["input", "change"]) {
-                    slider.addEventListener(eventName, (evt: Event) => sliderEvent(input, evt, true));
+                    slider.addEventListener(eventName, (evt: Event) => sliderEvent(slider, evt, true));
                 }
             }
         }
@@ -96,7 +98,7 @@ namespace Slider {
             getAxisMaxSlider(dimension).value = String(range.max);
         }
         //Bold for selected
-        const rangeNames:HTMLCollection = Array.from(document.getElementById(`${dimension}_values`).children);
+        const rangeNames:Element[] = Array.from(document.getElementById(`${dimension}_values`).children);
         for (const element:HTMLElement of rangeNames) {
             element.classList.remove("highlighted")
         }
@@ -137,12 +139,13 @@ namespace Slider {
             //Calculate inbox
             for (const y_final:string of y_finals) {
                 for (const x_final:string of x_finals) {
-                    const cell:HTMLElement = document.getElementById(x_final + y_final);
+                    const cellId:string = `${x_final}${y_final}`;
+                    const cell:HTMLElement = document.getElementById(cellId);
                     if (isAxis || withForce) {
                         cell.classList.add("inbox");
                     }
                     compoundsSum += parseInt(cell.getAttribute("num"));
-                    const linkedTranches:ReadonlyArray<string>|undefined = CALC_RESULT.finalResult().cellToTranches().get(x_final + y_final);
+                    const linkedTranches:ReadonlyArray<string>|undefined = CALC_RESULT.finalResult.cellToTranches.get(cellId);
                     if (linkedTranches !== undefined) {
                         tranchesSum += linkedTranches.length;
                     }
@@ -157,19 +160,19 @@ namespace Slider {
                     }
                 }
                 for (let i:number = 0; i < lettersY.length; i++) {
-                    highlightRange(x_finals[x_finals.length - 1] + lettersY[i], "Right"); //Right vertical
-                    highlightRange(x_finals[0] + lettersY[i], "Left"); //Left vertical
+                    highlightRange(`${x_finals[x_finals.length - 1]}${lettersY[i]}`, "Right"); //Right vertical
+                    highlightRange(`${x_finals[0]}${lettersY[i]}`, "Left"); //Left vertical
                 }
                 for (let i:number = 0; i < lettersX.length; i++) {
-                    highlightRange(lettersX[i] + y_finals[0], "Top"); //Top horizontal
-                    highlightRange(lettersX[i] + y_finals[y_finals.length - 1], "Bottom"); //Bottom horizontal
+                    highlightRange(`${lettersX[i]}${y_finals[0]}`, "Top"); //Top horizontal
+                    highlightRange(`${lettersX[i]}${y_finals[y_finals.length - 1]}`, "Bottom"); //Bottom horizontal
                 }
                 for (let frame:number = 0; frame < 2; frame++) {
                     const cells:ReadonlyArray<HTMLElement> = [
-                        document.getElementById(x_finals[x_finals.length - 1] + frame),
-                        document.getElementById(x_finals[0] + frame),
-                        document.getElementById(frame + y_finals[0]),
-                        document.getElementById(frame + y_finals[y_finals.length - 1])
+                        document.getElementById(`${x_finals[x_finals.length - 1]}${frame}`),
+                        document.getElementById(`${x_finals[0]}${frame}`),
+                        document.getElementById(`${frame}${y_finals[0]}`),
+                        document.getElementById(`${frame}${y_finals[y_finals.length - 1]}`)
                     ];
                     for (const cell:HTMLElement of cells) {
                         cell.classList.remove("unselected");
@@ -199,21 +202,21 @@ namespace Slider {
         return letters;
     }
 
-    function createRangeInput(id:string, container:HTMLElement, value:number, max:number):void {
-        const slider:HTMLElement = document.createElement("input");
+    function createRangeInput(id:string, value:number, max:number):HTMLInputElement {
+        const slider:HTMLInputElement = document.createElement("input");
         slider.setAttribute("type", "range");
         slider.setAttribute("step", "1");
         slider.setAttribute("min", "1");
         slider.setAttribute("max", String(max));
         slider.setAttribute("value", String(value));
         slider.setAttribute("id", id);
-        container.appendChild(slider);
+        return slider;
     }
 
     function highlightRange(id:string, position:string):void {
         const cell:HTMLElement = document.getElementById(id);
         cell.classList.remove("unselected");
-        cell.classList.add("selected", "selected" + position);
+        cell.classList.add("selected", `selected${position}`);
     }
 
     function getAxisSliderRange(dimension:string):Limits {

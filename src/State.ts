@@ -42,32 +42,41 @@ namespace State {
     }
 
     export class Limits { //TODO rename as Range
-        readonly min: number;
-        readonly max: number;
+        private readonly _min: number;
+        private readonly _max: number;
 
         constructor(min: number, max: number) {
-            this.min = min;
-            this.max = max;
+            this._min = min;
+            this._max = max;
         }
 
         isNotValid():boolean {
-            return this.min > this.max;
+            return this._min > this._max;
         }
 
         getValidated(): Limits {
             if (this.isNotValid()) {
-                return new Limits(this.max, this.min);
+                return new Limits(this._max, this._min);
             } else {
                 return this;
             }
         }
 
         matches(int: number): boolean {
-            return int >= this.min && int < this.max;
+            return int >= this._min && int < this._max;
         }
 
         areEqual():boolean {
-            return this.min === this.max;
+            return this._min === this._max;
+        }
+
+
+        get min(): number {
+            return this._min;
+        }
+
+        get max(): number {
+            return this._max;
         }
     }
 

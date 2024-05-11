@@ -2,13 +2,12 @@ import {Constant} from "../Constant.ts";
 import {KEY} from "../data/mapping/key.ts";
 import State from "../State.ts";
 
-
 namespace AxisSelector {
     import Axis = Constant.Axis;
     import AxisValues = State.AxisValues;
 
-    export function createAxisSelector(axis:Axis, values:AxisValues):HTMLElement {
-        const select:HTMLElement = document.createElement("select");
+    export function createAxisSelector(axis:Axis, values:AxisValues):HTMLSelectElement {
+        const select:HTMLSelectElement = document.createElement("select");
         select.setAttribute("id", `select_${axis}`);
         select.setAttribute("name", `select_${axis}`);
         select.setAttribute("class", "axis_selector");
@@ -16,7 +15,7 @@ namespace AxisSelector {
         const options:DocumentFragment = document.createDocumentFragment();
         for (const dimension:string of KEY.map.keys()) {
             if (values.getComplementValue(axis) !== dimension) {
-                const option:HTMLElement = document.createElement("option");
+                const option:HTMLOptionElement = document.createElement("option");
                 option.setAttribute("value", dimension);
                 option.innerHTML = dimension;
                 options.appendChild(option);

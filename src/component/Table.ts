@@ -1,138 +1,121 @@
-import {KEY} from "../data/mapping/key.ts";
-import AxisSelector from "./AxisSelector.ts";
+import State from "../State.ts";
 import {Constant} from "../Constant.ts";
+import AxisSelector from "./AxisSelector.ts";
+import {KEY} from "../data/mapping/key.ts";
 
 namespace Table {
-    import createAxisSelector = AxisSelector.createAxisSelector;
     import AxisValues = State.AxisValues;
     import Axis = Constant.Axis;
+    import createAxisSelector = AxisSelector.createAxisSelector;
 
-    export function renderTable(axis:AxisValues):HTMLElement {
+    export function renderTable(axis:AxisValues):HTMLTableElement {
         const x_axis:string = axis.getValue(Axis.X);
         const y_axis:string = axis.getValue(Axis.Y);
-        const select_x:HTMLElement = createAxisSelector(Axis.X, axis);
-        const select_y:HTMLElement = createAxisSelector(Axis.Y, axis);
+        const select_x:HTMLSelectElement = createAxisSelector(Axis.X, axis);
+        const select_y:HTMLSelectElement = createAxisSelector(Axis.Y, axis);
         //Create table
-        const table:HTMLElement = document.createElement("table");
+        const table:HTMLTableElement = document.createElement("table");
         table.setAttribute("id", "table");
         const tableHolder:DocumentFragment = document.createDocumentFragment();
         //Header X
-        const first_line:HTMLElement = document.createElement("tr");
-        const placeholder:HTMLElement = document.createElement("th");
-        const x_axis_name:HTMLElement = document.createElement("th");
-        placeholder.setAttribute("class", "cell");
-        placeholder.setAttribute("id", "placeholder");
-        x_axis_name.setAttribute("colspan", get_axis_length(x_axis) + 1 + (KEY.dimensionsWithZero.has(x_axis) ? 1 : 0));
-        x_axis_name.setAttribute("class", "cell");
-        x_axis_name.setAttribute("id", "x_axis");
-        x_axis_name.appendChild(select_x);
-        first_line.appendChild(placeholder);
-        first_line.appendChild(x_axis_name);
-        tableHolder.appendChild(first_line);
+        tableHolder.appendChild(createFirstLine(select_x, x_axis));
         //Header Y
-        const second_line:HTMLElement = document.createElement("tr");
-        const y_axis_name:HTMLElement = document.createElement("th");
-        y_axis_name.setAttribute("rowspan", get_axis_length(y_axis) + 2 + (KEY.dimensionsWithZero.has(y_axis) ? 1 : 0));
-        y_axis_name.setAttribute("class", "cell");
-        y_axis_name.setAttribute("id", "y_axis");
-        y_axis_name.appendChild(select_y);
-        second_line.appendChild(y_axis_name);
-        tableHolder.appendChild(second_line);
+        tableHolder.appendChild(createSecondLine(select_y, y_axis));
         //Call tranches
         const y_map:ReadonlyMap<string, string> = KEY.map.get(y_axis);
         const x_map:ReadonlyMap<string, string> = KEY.map.get(x_axis);
         const y_keys:ReadonlyArray<string> = Array.from(y_map.keys());
         const x_keys:ReadonlyArray<string> = Array.from(x_map.keys());
         const y_length:number = KEY.dimensionsWithZero.has(y_axis)
-            ? get_axis_length(y_axis) + 1 : get_axis_length(y_axis);
+            ? getAxisRanges(y_axis) + 1 : getAxisRanges(y_axis);
         const x_length:number = KEY.dimensionsWithZero.has(x_axis)
-            ? get_axis_length(x_axis) + 1 : get_axis_length(x_axis);
+            ? getAxisRanges(x_axis) + 1 : getAxisRanges(x_axis);
         //Cells
-        for (let i = 0; i < y_length + 1; i++) {
-            const row:HTMLElement = document.createElement("tr");
+        for (let i:number = 0; i < y_length + 1; i++) {
+            const row:HTMLTableRowElement = document.createElement("tr");
             const rowHolder:DocumentFragment = document.createDocumentFragment();
             row.setAttribute("class", "row");
-            for (let k = 0; k < x_length + 1; k++) {
-                const cell = document.createElement("td");
-                cell.style.height = 641 / (get_axis_length(y_axis) + 5) + "px";
-                cell.setAttribute("class", "cell unselected");
+            for (let k:number = 0; k < x_length + 1; k++) {
+                const cell:HTMLTableCellElement = document.createElement("td");
+                cell.style.height = `${641 / (getAxisRanges(y_axis) + 5)}px`;
+                setClasses(cell, "cell unselected");
                 if (i === 0 && k > 0) {
                     //First row
-                    cell.setAttribute("class", "axis cell frame unselected");
+                    setClasses(cell, "axis cell frame unselected");
                     if (KEY.dimensionsWithZero.has(x_axis)) {
-                        cell.setAttribute("id", x_keys[k - 1] + "1");
+                        setId(cell, `${x_keys[k - 1]}1`);
                     } else {
-                        cell.setAttribute("id", x_keys[k] + "1");
+                        setId(cell, `${x_keys[k]}1`);
                     }
                     if (k === x_length) {
-                        cell.setAttribute("id", "01");
-                        cell.innerHTML = "Row sums:";
+                        setId(cell, "01");
+                        setText(cell, "Row sums:");
                     } else if (KEY.dimensionsWithZero.has(x_axis) && (k === 1 || x_axis === "EnamineCC")) {
-                        cell.innerHTML = x_map.get(x_keys[k - 1]);
+                        setText(cell, `${x_map.get(x_keys[k - 1])}`);
                     }
                     else if (KEY.dimensionsWithZero.has(x_axis)) {
-                        cell.innerHTML = x_map.get(x_keys[k - 2]) + " - " + x_map.get(x_keys[k - 1]);
+                        setText(cell, `${x_map.get(x_keys[k - 2])} - ${x_map.get(x_keys[k - 1])}`);
                     }
                     else {
-                        cell.innerHTML = x_map.get(x_keys[k - 1]) + " - " + x_map.get(x_keys[k]);
+                        setText(cell, `${x_map.get(x_keys[k - 1])} - ${x_map.get(x_keys[k])}`);
                     }
                 } else {
                     if (i > 0 && k === 0) {
                         //First column
-                        cell.setAttribute("class", "axis cell frame unselected");
+                        setClasses(cell, "axis cell frame unselected");
                         if (KEY.dimensionsWithZero.has(y_axis)) {
-                            cell.setAttribute("id", "1" + y_keys[i - 1]);
+                            setId(cell, `1${y_keys[i - 1]}`);
                         } else {
-                            cell.setAttribute("id", "1" + y_keys[i]);
+                            setId(cell, `1${y_keys[i]}`);
                         }
                         if (i === y_length) {
-                            cell.setAttribute("id", "10");
-                            cell.innerHTML = "Column sums:";
+                            setId(cell, "10");
+                            setText(cell, "Column sums:");
                         } else if (KEY.dimensionsWithZero.has(y_axis) && (i === 1 || y_axis === "EnamineCC")) {
-                            cell.innerHTML = y_map.get(y_keys[i - 1]);
+                            setText(cell, `${y_map.get(y_keys[i - 1])}`);
                         } else if (KEY.dimensionsWithZero.has(y_axis)) {
-                            cell.innerHTML = y_map.get(y_keys[i - 2]) + " - " + y_map.get(y_keys[i - 1]);
+                            setText(cell, `${y_map.get(y_keys[i - 2])} - ${y_map.get(y_keys[i - 1])}`);
                         } else {
-                            cell.innerHTML = y_map.get(y_keys[i - 1]) + " - " + y_map.get(y_keys[i]);
+                            setText(cell, `${y_map.get(y_keys[i - 1])} - ${y_map.get(y_keys[i])}`);
                         }
                     } else {
                         //First cell
                         if (i === 0 && k === 0) {
-                            cell.setAttribute("class", "cell frame unselected");
+                            setClasses(cell, "cell frame unselected");
                         }
                         else {
                             //Last cell
                             if (i === y_length && k === x_length) {
-                                cell.setAttribute("class", "cell frame unselected");
+                                setClasses(cell, "cell frame unselected");
                             }
                             else {
                                 if (k === x_length) { //Rows sums
                                     if (KEY.dimensionsWithZero.has(y_axis)) {
-                                        cell.setAttribute("id", "0" + y_keys[i - 1]);
+                                        setId(cell, `0${y_keys[i - 1]}`);
                                     } else {
-                                        cell.setAttribute("id", "0" + y_keys[i]);
+                                        setId(cell, `0${y_keys[i]}`);
                                     }
                                 } else if (i === y_length) { //Column sums
                                     if (KEY.dimensionsWithZero.has(x_axis)) {
-                                        cell.setAttribute("id", x_keys[k - 1] + "0");
+                                        setId(cell, `${x_keys[k - 1]}0`);
                                     } else {
-                                        cell.setAttribute("id", x_keys[k] + "0");
+                                        setId(cell, `${x_keys[k]}0`);
                                     }
                                 } else {
                                     //Plain cell
-                                    cell.setAttribute("class", "cell unselected field");
+                                    setClasses(cell, "cell unselected field");
                                     if (KEY.dimensionsWithZero.has(x_axis) && KEY.dimensionsWithZero.has(y_axis)) {
-                                        cell.setAttribute("id", x_keys[k - 1] + y_keys[i - 1]);
+                                        setId(cell, `${x_keys[k - 1]}${y_keys[i - 1]}`);
                                     } else if (KEY.dimensionsWithZero.has(x_axis)) {
-                                        cell.setAttribute("id", x_keys[k - 1] + y_keys[i]);
+                                        setId(cell, `${x_keys[k - 1]}${y_keys[i]}`);
                                     } else if (KEY.dimensionsWithZero.has(y_axis)) {
-                                        cell.setAttribute("id", x_keys[k] + y_keys[i - 1]);
+                                        setId(cell, `${x_keys[k]}${y_keys[i - 1]}`);
                                     } else {
-                                        cell.setAttribute("id", x_keys[k] + y_keys[i]);
+                                        setId(cell, `${x_keys[k]}${y_keys[i]}`);
                                     }
                                     cell.setAttribute("num", "0");
                                 }
-                                cell.innerHTML = "0";
+                                setText(cell, "0");
                             }
                         }
                     }
@@ -146,7 +129,45 @@ namespace Table {
         return table;
     }
 
-    function get_axis_length(dimension:string):number {
+    function getAxisRanges(dimension:string):number {
         return KEY.map.get(dimension).size;
+    }
+
+    function setClasses(cell:HTMLTableCellElement, classes:string):void {
+        cell.setAttribute("class", classes);
+    }
+
+    function setId(cell:HTMLTableCellElement, id:string):void {
+        cell.setAttribute("id", id);
+    }
+
+    function setText(cell:HTMLTableCellElement, text:string):void {
+        cell.innerText = text;
+    }
+
+    function createFirstLine(select_x:HTMLSelectElement, x_axis:string):HTMLTableRowElement {
+        const first_line:HTMLTableRowElement = document.createElement("tr");
+        const placeholder:HTMLTableCellElement = document.createElement("th");
+        const x_axis_name:HTMLTableCellElement = document.createElement("th");
+        placeholder.setAttribute("class", "cell");
+        placeholder.setAttribute("id", "placeholder");
+        x_axis_name.setAttribute("colspan", getAxisRanges(x_axis) + 1 + (KEY.dimensionsWithZero.has(x_axis) ? 1 : 0));
+        x_axis_name.setAttribute("class", "cell");
+        x_axis_name.setAttribute("id", "x_axis");
+        x_axis_name.appendChild(select_x);
+        first_line.appendChild(placeholder);
+        first_line.appendChild(x_axis_name);
+        return first_line;
+    }
+
+    function createSecondLine(select_y:HTMLSelectElement, y_axis:string):HTMLTableRowElement {
+        const second_line:HTMLTableRowElement = document.createElement("tr");
+        const y_axis_name:HTMLTableCellElement = document.createElement("th");
+        y_axis_name.setAttribute("rowspan", getAxisRanges(y_axis) + 2 + (KEY.dimensionsWithZero.has(y_axis) ? 1 : 0));
+        y_axis_name.setAttribute("class", "cell");
+        y_axis_name.setAttribute("id", "y_axis");
+        y_axis_name.appendChild(select_y);
+        second_line.appendChild(y_axis_name);
+        return second_line;
     }
 }
