@@ -1,22 +1,11 @@
 import {KEY} from "../data/mapping/key.ts";
 import {DESCRIPTION} from "../data/mapping/description.ts";
 import {Constant} from "../Constant.ts";
-import State from "../State.ts";
-import AxisSelector from "./AxisSelector.ts";
-import Wrapper from "./Wrapper.ts";
-import Calculation from "../State.ts";
+import {Calculation, State} from "../State.ts";
+import {AxisSelector} from "./AxisSelector.ts";
+import {Wrapper} from "./Wrapper.ts";
 
-namespace Slider {
-    import FIRST_COLUMN_SLIDERS = Constant.FIRST_COLUMN_SLIDERS;
-    import sliderNameToPoints = Constant.sliderNameToPoints;
-    import Axis = Constant.Axis;
-    import AxisValues = State.AxisValues;
-    import Limits = State.Limits;
-    import getAxisValues = AxisSelector.getAxisValues;
-    import TOTALS = State.TOTALS;
-    import Counter = Constant.Counter;
-    import addSumWrappers = Wrapper.addSumWrappers;
-    import CALC_RESULT = Calculation.CALC_RESULT;
+export namespace Slider {
 
     export function renderControls():void {
         const column0:HTMLElement = document.getElementById("controls_0");
@@ -31,7 +20,7 @@ namespace Slider {
             for (let k:number = 0; k < length; k++) {
                 const option:HTMLSpanElement = document.createElement("span");
                 option.innerHTML = sliderValues[k];
-                option.style.insetInlineStart = `${sliderNameToPoints(dimension)[k]}px`;
+                option.style.insetInlineStart = `${Constant.sliderNameToPoints(dimension)[k]}px`;
                 if (k === 0 || k === length - 1) {
                     option.classList.add("highlighted");
                 }
@@ -48,7 +37,7 @@ namespace Slider {
             container.appendChild(label);
             container.appendChild(createRangeInput(`${dimension}_min`, 1, length));
             container.appendChild(createRangeInput(`${dimension}_max`, length, length));
-            if (FIRST_COLUMN_SLIDERS.includes(dimension)) {
+            if (Constant.FIRST_COLUMN_SLIDERS.includes(dimension)) {
                 column0.appendChild(container);
             } else {
                 column1.appendChild(container);
@@ -57,16 +46,16 @@ namespace Slider {
         }
     }
 
-    export function addSliderEvents(axisValues:AxisValues):void {
+    export function addSliderEvents(axisValues:State.AxisValues):void {
         Array.from(document.getElementsByClassName("slider"))
-            .filter(slider => slider.firstElementChild.id !== axisValues.getValue(Axis.X)
-                && slider.firstElementChild.id !== axisValues.getValue(Axis.Y))
+            .filter(slider => slider.firstElementChild.id !== axisValues.getValue(Constant.Axis.X)
+                && slider.firstElementChild.id !== axisValues.getValue(Constant.Axis.Y))
             .forEach(slider => Array.from(slider.querySelectorAll("input"))
                 .forEach(input => {
                     ["mouseup"].forEach(ev => input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, true)));
                     ["input", "change"].forEach(ev => input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, false)));
                 }));
-        for (const dimension:string of [axisValues.getValue(Axis.X), axisValues.getValue(Axis.Y)]) {
+        for (const dimension:string of [axisValues.getValue(Constant.Axis.X), axisValues.getValue(Constant.Axis.Y)]) {
             for (const slider:HTMLElement of [getAxisMinSlider(dimension), getAxisMaxSlider(dimension)]) {
                 for (const eventName:string of ["input", "change"]) {
                     slider.addEventListener(eventName, (evt: Event) => sliderEvent(slider, evt, true));
@@ -78,16 +67,16 @@ namespace Slider {
     function sliderEvent(input:HTMLElement, evt:Event, withNarrow:boolean):void {
         const labelNode:HTMLElement = input.parentNode.querySelector(".slider_name");
         const dimension:string = labelNode.id;
-        let range:Limits = getRange(dimension);
+        let range:State.Limits = getRange(dimension);
         if (range.areEqual()) {
             //Limit sliders
-            const maxSlider:HTMLElement = getAxisMaxSlider(dimension);
-            const minSlider:HTMLElement = getAxisMinSlider(dimension);
+            const maxSlider:HTMLInputElement = getAxisMaxSlider(dimension);
+            const minSlider:HTMLInputElement = getAxisMinSlider(dimension);
             if(!KEY.dimensionsWithZero.has(dimension)) {
                 if (maxSlider.max === maxSlider.value) {
-                    minSlider.value = maxSlider.max - 1;
+                    minSlider.value = String(parseInt(maxSlider.max) - 1);
                 } else {
-                    maxSlider.value = minSlider.value + 1;
+                    maxSlider.value = String(parseInt(minSlider.value) + 1);
                 }
             }
             range = getRange(dimension);
@@ -114,14 +103,14 @@ namespace Slider {
     }
 
     export function narrow(name:string, withForce:boolean = false):void {
-        const axisValues:AxisValues = getAxisValues();
-        const isAxis:boolean = name === axisValues.getValue(Axis.X) || name === axisValues.getValue(Axis.Y);
+        const axisValues:State.AxisValues = AxisSelector.getAxisValues();
+        const isAxis:boolean = name === axisValues.getValue(Constant.Axis.X) || name === axisValues.getValue(Constant.Axis.Y);
         let compoundsSum:number = 0
         let tranchesSum:number = 0;
-        const lettersX:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Axis.X));
-        const lettersY:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Axis.Y));
-        const rangeX:Limits = getAxisSliderRange(axisValues.getValue(Axis.X));
-        const rangeY:Limits = getAxisSliderRange(axisValues.getValue(Axis.Y));
+        const lettersX:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Constant.Axis.X));
+        const lettersY:ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Constant.Axis.Y));
+        const rangeX:State.Limits = getAxisSliderRange(axisValues.getValue(Constant.Axis.X));
+        const rangeY:State.Limits = getAxisSliderRange(axisValues.getValue(Constant.Axis.Y));
         if (!rangeX.areEqual() && !rangeY.areEqual()) {
             const x_finals:Array<string> = [];
             const y_finals:Array<string> = [];
@@ -145,7 +134,7 @@ namespace Slider {
                         cell.classList.add("inbox");
                     }
                     compoundsSum += parseInt(cell.getAttribute("num"));
-                    const linkedTranches:ReadonlyArray<string>|undefined = CALC_RESULT.finalResult.cellToTranches.get(cellId);
+                    const linkedTranches:ReadonlyArray<string>|undefined = Calculation.CALC_RESULT.finalResult?.cellToTranches.get(cellId);
                     if (linkedTranches !== undefined) {
                         tranchesSum += linkedTranches.length;
                     }
@@ -189,9 +178,9 @@ namespace Slider {
             renderValues(axisValues);
         }
         //Add sums
-        TOTALS.setMin(Counter.COMPOUNDS, compoundsSum)
-        TOTALS.setMin(Counter.TRANCHES, tranchesSum);
-        addSumWrappers();
+        State.TOTALS.setMin(Constant.Counter.COMPOUNDS, compoundsSum)
+        State.TOTALS.setMin(Constant.Counter.TRANCHES, tranchesSum);
+        Wrapper.addSumWrappers();
     }
 
     function getAxisLetters(dimension:string):ReadonlyArray<string> {
@@ -219,15 +208,15 @@ namespace Slider {
         cell.classList.add("selected", `selected${position}`);
     }
 
-    function getAxisSliderRange(dimension:string):Limits {
-        return new Limits(
+    function getAxisSliderRange(dimension:string):State.Limits {
+        return new State.Limits(
             getRangeMin(dimension) - 1,
             KEY.dimensionsWithZero.has(dimension) ? getRangeMax(dimension) : getRangeMin(dimension) - 1
         ).getValidated();
     }
 
-    export function getRange(dimension:string):Limits {
-        return new Limits(getRangeMin(dimension), getRangeMax(dimension));
+    export function getRange(dimension:string):State.Limits {
+        return new State.Limits(getRangeMin(dimension), getRangeMax(dimension));
     }
 
     function getRangeMin(dimension:string):number {

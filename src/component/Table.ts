@@ -1,18 +1,15 @@
-import State from "../State.ts";
 import {Constant} from "../Constant.ts";
-import AxisSelector from "./AxisSelector.ts";
 import {KEY} from "../data/mapping/key.ts";
+import {State} from "../State.ts";
+import {AxisSelector} from "./AxisSelector.ts";
 
-namespace Table {
-    import AxisValues = State.AxisValues;
-    import Axis = Constant.Axis;
-    import createAxisSelector = AxisSelector.createAxisSelector;
+export namespace Table {
 
-    export function renderTable(axis:AxisValues):HTMLTableElement {
-        const x_axis:string = axis.getValue(Axis.X);
-        const y_axis:string = axis.getValue(Axis.Y);
-        const select_x:HTMLSelectElement = createAxisSelector(Axis.X, axis);
-        const select_y:HTMLSelectElement = createAxisSelector(Axis.Y, axis);
+    export function renderTable(axis:State.AxisValues):HTMLTableElement {
+        const x_axis:string = axis.getValue(Constant.Axis.X);
+        const y_axis:string = axis.getValue(Constant.Axis.Y);
+        const select_x:HTMLSelectElement = AxisSelector.createAxisSelector(Constant.Axis.X, axis);
+        const select_y:HTMLSelectElement = AxisSelector.createAxisSelector(Constant.Axis.Y, axis);
         //Create table
         const table:HTMLTableElement = document.createElement("table");
         table.setAttribute("id", "table");
@@ -22,8 +19,8 @@ namespace Table {
         //Header Y
         tableHolder.appendChild(createSecondLine(select_y, y_axis));
         //Call tranches
-        const y_map:ReadonlyMap<string, string> = KEY.map.get(y_axis);
-        const x_map:ReadonlyMap<string, string> = KEY.map.get(x_axis);
+        const y_map:ReadonlyMap<string, string>|undefined = KEY.map.get(y_axis);
+        const x_map:ReadonlyMap<string, string>|undefined = KEY.map.get(x_axis);
         const y_keys:ReadonlyArray<string> = Array.from(y_map.keys());
         const x_keys:ReadonlyArray<string> = Array.from(x_map.keys());
         const y_length:number = KEY.dimensionsWithZero.has(y_axis)

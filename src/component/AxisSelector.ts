@@ -1,12 +1,11 @@
 import {Constant} from "../Constant.ts";
 import {KEY} from "../data/mapping/key.ts";
-import State from "../State.ts";
+import {State} from "../State.ts";
 
-namespace AxisSelector {
+export namespace AxisSelector {
     import Axis = Constant.Axis;
-    import AxisValues = State.AxisValues;
 
-    export function createAxisSelector(axis:Axis, values:AxisValues):HTMLSelectElement {
+    export function createAxisSelector(axis:Axis, values:State.AxisValues):HTMLSelectElement {
         const select:HTMLSelectElement = document.createElement("select");
         select.setAttribute("id", `select_${axis}`);
         select.setAttribute("name", `select_${axis}`);
@@ -30,11 +29,11 @@ namespace AxisSelector {
         return select !== null ? select.value : "";
     }
 
-    export function getAxisValues():AxisValues {
-        return new AxisValues(getAxisValue(Axis.X), getAxisValue(Axis.Y));
+    export function getAxisValues():State.AxisValues {
+        return new State.AxisValues(getAxisValue(Axis.X), getAxisValue(Axis.Y));
     }
 
-    export function setAxisValues(values:AxisValues):void {
+    export function setAxisValues(values:State.AxisValues):void {
         const selectX:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById("select_x");
         if (selectX !== null) {
             selectX.value = values.getValue(Axis.X);

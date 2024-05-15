@@ -1,8 +1,4 @@
-import Message from "./infrastructure/Message.ts";
-
-namespace JSWorkerFactory {
-
-    import SaveMessage = Message.SaveMessage;
+export namespace JSWorkerFactory {
 
     export interface NamedWorker {
         readonly name:string;
@@ -10,13 +6,21 @@ namespace JSWorkerFactory {
     }
 
     abstract class AbstractWorker implements NamedWorker {
-        readonly name:string;
-        readonly worker:Worker;
+        private readonly _name:string;
+        private readonly _worker:Worker;
 
         protected constructor(fileName:string, callback:(msg:any) => Promise<void>, order:number) {
-            this.name = "Worker-" + order;
-            this.worker = new Worker(fileName, {name: this.name});
-            this.worker.addEventListener("message", (msg:any) => callback(msg), false);
+            this._name = "Worker-" + order;
+            this._worker = new Worker(fileName, {name: this._name});
+            this._worker.addEventListener("message", (msg:any) => callback(msg), false);
+        }
+
+        get name(): string {
+            return this._name;
+        }
+
+        get worker(): Worker {
+            return this._worker;
         }
     }
 
@@ -38,15 +42,15 @@ namespace JSWorkerFactory {
         }
     }
 
-    export async function newNetworkLoader(callback:(msg:any) => Promise<void>, order:number):Promise<NamedWorker> {
+    export async function newNetworkLoader(callback:(msg:any) => Promise<void>, order:number):Promise<JSWorkerFactory.NamedWorker> {
         return Promise.resolve(new NetworkLoader(callback, order));
     }
 
-    export async function newDatabaseLoader(callback:(msg:any) => Promise<void>, order:number):Promise<NamedWorker> {
+    export async function newDatabaseLoader(callback:(msg:any) => Promise<void>, order:number):Promise<JSWorkerFactory.NamedWorker> {
         return Promise.resolve(new DatabaseLoader(callback, order));
     }
 
-    export async function newDatabaseSaver(callback:(msg:SaveMessage) => Promise<void>):Promise<NamedWorker> {
+    export async function newDatabaseSaver(callback: (message: any) => Promise<void>):Promise<JSWorkerFactory.NamedWorker> {
         return Promise.resolve(new DatabaseSaver(callback));
     }
 }

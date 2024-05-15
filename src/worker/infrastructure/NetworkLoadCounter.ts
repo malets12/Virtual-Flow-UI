@@ -1,10 +1,13 @@
-import {AsyncCalculator, Loader, Tranche} from "./Abstraction.ts";
-import type {CalculationRequestMessage, LoadMessage} from "./Message.ts";
-import {CalculationDoneMessage, LoadCompleteMessage} from "./Message.ts";
+import {AsyncCalculator, Calculator, Loader, Tranche} from "./Abstractions.ts";
 import {Constant} from "../../Constant.ts";
+import {Message} from "./Message.ts";
 import Source = Constant.Source;
+import CalculationRequestMessage = Message.CalculationRequestMessage;
+import CalculationDoneMessage = Message.CalculationDoneMessage;
+import LoadRequestMessage = Message.LoadRequestMessage;
+import LoadCompleteMessage = Message.LoadCompleteMessage;
 
-export default class NetworkLoadCounter extends AsyncCalculator implements Loader {
+export default class NetworkLoadCounter extends AsyncCalculator implements Loader, Calculator {
     readonly JSONS:Array<Tranche>;
     readonly label:string;
     readonly source:Source;
@@ -16,10 +19,10 @@ export default class NetworkLoadCounter extends AsyncCalculator implements Loade
     }
 
     async calculate(requestMessage:CalculationRequestMessage):Promise<CalculationDoneMessage> {
-        return super.calculatePart(request).then(result => new CalculationDoneMessage(this.label, result));
+        return super.calculatePart(requestMessage).then(result => new CalculationDoneMessage(this.label, result));
     }
 
-    async load(loadMessage: LoadMessage): Promise<LoadCompleteMessage> {
+    async load(loadMessage: LoadRequestMessage): Promise<LoadCompleteMessage> {
         return fetch(loadMessage.jsonUrl, {
             method: "GET",
             headers: { "Content-Type": "application/json; charset=utf-8" }})

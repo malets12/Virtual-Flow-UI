@@ -1,13 +1,15 @@
 import {Constant} from "../../Constant.ts";
+import {ORDER} from "../../data/mapping/order.ts";
+import {Calculation, State} from "../../State.ts";
+import {Message} from "./Message.ts";
+import CalculationResult = Calculation.CalculationResult;
+import Axis = Constant.Axis;
 import Source = Constant.Source;
-import CalculationResult = State.CalculationResult;
-import Message from "./Message.ts";
-import LoadRequestMessage = Message.LoadRequestMessage;
-import LoadCompleteMessage = Message.LoadCompleteMessage;
-import WorkerMessage = Message.WorkerMessage;
-import CalculationRequestMessage = Message.CalculationRequestMessage;
 import CalculationDoneMessage = Message.CalculationDoneMessage;
-import {KEY} from "../../data/mapping/key.ts";
+import CalculationRequestMessage = Message.CalculationRequestMessage;
+import LoadCompleteMessage = Message.LoadCompleteMessage;
+import LoadRequestMessage = Message.LoadRequestMessage;
+import WorkerMessage = Message.WorkerMessage;
 import Limits = State.Limits;
 
 export interface Tranche {
@@ -22,7 +24,7 @@ export interface Calculator {
     calculate(requestMessage:CalculationRequestMessage):Promise<CalculationDoneMessage>;
 }
 
-export abstract class AsyncCalculator implements Calculator {
+export abstract class AsyncCalculator {
     abstract readonly JSONS:Array<Tranche>;
     abstract readonly label:string;
     abstract readonly source:Source;
@@ -32,8 +34,8 @@ export abstract class AsyncCalculator implements Calculator {
         const cellToTranches:Map<string, Array<string>> = new Map();
         let totalTranches:number = 0;
         let totalCompounds:number = 0;
-        const pos_x:number = KEY.map.get(requestMessage.axis.x);
-        const pos_y:number = KEY.map.get(requestMessage.axis.y);
+        const pos_x:number|undefined = ORDER.map.get(requestMessage.axis.getValue(Axis.X));
+        const pos_y:number|undefined = ORDER.map.get(requestMessage.axis.getValue(Axis.Y));
         for (const json: Tranche of this.JSONS) {
             for (const entry:readonly [string, number] of Object.entries(json)) {
                 const key:string = entry[0];
@@ -42,8 +44,8 @@ export abstract class AsyncCalculator implements Calculator {
                 let add:boolean = true;
                 if (!requestMessage.isInit) {
                     add = requestMessage.notSelectedDimensions.every(dimension => {
-                        const pos_param:number = KEY.map.get(dimension);
-                        const limits:Limits = requestMessage.possibleValues.get(dimension);
+                        const pos_param:number|undefined = ORDER.map.get(dimension);
+                        const limits:Limits|undefined = requestMessage.possibleValues.get(dimension);
                         const int:number = this.toInt(key.substring(pos_param - 1, pos_param));
                         return limits.matches(int);
                     });

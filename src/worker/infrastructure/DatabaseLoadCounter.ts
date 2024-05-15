@@ -1,15 +1,16 @@
-import {AsyncCalculator, Loader, Tranche} from "./Abstraction.ts";
-import type {CalculationRequestMessage, LoadMessage} from "./Message.ts";
-import Message from "./Message.ts";
-import LoadCompleteMessage = Message.LoadCompleteMessage;
-import WorkerMessage = Message.WorkerMessage;
-import CalculationDoneMessage = Message.CalculationDoneMessage;
+import {AsyncCalculator, Calculator, Loader, Tranche} from "./Abstractions.ts";
+import {Message} from "./Message.ts";
 import {Constant} from "../../Constant.ts";
 import Source = Constant.Source;
 import WorkerAction = Constant.WorkerAction;
 import Database = Constant.Database;
+import WorkerMessage = Message.WorkerMessage;
+import CalculationDoneMessage = Message.CalculationDoneMessage;
+import LoadCompleteMessage = Message.LoadCompleteMessage;
+import CalculationRequestMessage = Message.CalculationRequestMessage;
+import LoadRequestMessage = Message.LoadRequestMessage;
 
-export default class DatabaseLoadCounter extends AsyncCalculator implements Loader {
+export default class DatabaseLoadCounter extends AsyncCalculator implements Loader, Calculator {
     readonly JSONS:Array<Tranche>;
     readonly label:string;
     readonly source:Source;
@@ -24,10 +25,10 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
     }
 
     async calculate(requestMessage:CalculationRequestMessage):Promise<CalculationDoneMessage> {
-        return super.calculatePart(request).then(result => new CalculationDoneMessage(this.label, result));
+        return super.calculatePart(requestMessage).then(result => new CalculationDoneMessage(this.label, result));
     }
 
-    async load(loadMessage:LoadMessage):Promise<LoadCompleteMessage>|Promise<WorkerMessage> {
+    async load(loadMessage:LoadRequestMessage):Promise<LoadCompleteMessage | WorkerMessage> {
         const req:IDBOpenDBRequest = indexedDB.open(Database.NAME, Database.VERSION);
         req.onsuccess = ():void => {
             const db:IDBDatabase = req.result;
@@ -44,7 +45,7 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
         };
     }
 
-    private async getDBEntry(db:IDBDatabase, key:string):Promise<LoadCompleteMessage>|Promise<WorkerMessage> {
+    private async getDBEntry(db:IDBDatabase, key:string):Promise<LoadCompleteMessage | WorkerMessage> {
         const request:IDBRequest = db.transaction(Database.STORE_NAME, "readonly")
             .objectStore(Database.STORE_NAME)
             .get(key);

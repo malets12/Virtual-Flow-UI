@@ -30,7 +30,7 @@ export function doFullReload():void {
     location.reload();
 }
 
-namespace LocalStorage {
+export namespace LocalStorage {
     const LOCAL_COPY:string = "tranchesLocalCopy";
     export function markHasLocalCopy():void {
         window.localStorage.setItem(LOCAL_COPY, "true");
@@ -41,8 +41,8 @@ namespace LocalStorage {
     }
 }
 
-namespace Loader {
-    const LOADER = "loader";
+export namespace Loader {
+    const LOADER:string = "loader";
     export function showLoader():void {
         document.getElementById(LOADER).style.display = "block"; //TODO check
     }

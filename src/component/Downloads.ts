@@ -1,14 +1,10 @@
 import {Download, DownloadTemplateMapping, DownloadURL} from "../data/mapping/download/download.ts";
+import {Calculation, State} from "../State.ts";
 import {replaceAll} from "../Utils.ts";
 import {KEY} from "../data/mapping/key.ts";
 import {ORDER} from "../data/mapping/order.ts";
-import State from "../State.ts";
-import Calculation from "../State.ts";
 
-namespace Downloads {
-    import AxisValues = State.AxisValues;
-    import SLIDERS_STATE = State.SLIDERS_STATE;
-    import CALC_RESULT = Calculation.CALC_RESULT;
+export namespace Downloads {
 
     export function renderDownloads():void {
         const downloadsContainer:HTMLDivElement = document.createElement("div");
@@ -78,10 +74,10 @@ namespace Downloads {
     }
 
     function makeRegexp():[string, string] {
-        SLIDERS_STATE.saveNew(new AxisValues(), true);
+        State.SLIDERS_STATE.saveNew(new State.AxisValues(), true);
         const result:Array<Array<string>> = [];
         ORDER.map.forEach(() => result.push([]));
-        for (const [dimension, limits] of SLIDERS_STATE.map()) {
+        for (const [dimension, limits] of State.SLIDERS_STATE.map) {
             const keys:Array<string> = Array.from(KEY.map.get(dimension).keys());
             const arr:Array<string> = result[ORDER.map.get(dimension) - 1];
             const min:number = limits.min - 1;
@@ -97,11 +93,11 @@ namespace Downloads {
             `[${result.map(arr => arr.join("|")).join("][")}]`]; //metatranch, tranch
     }
 
-    function findInbox():ReadonlyArray<string> {
+    function findInbox():ReadonlyArray<string>|undefined {
         return Array.from(document.getElementsByClassName("inbox"))
             .map(cell => cell.id)
-            .filter(id => CALC_RESULT.finalResult.cellToTranches.has(id))
-            .map(id => CALC_RESULT.finalResult.cellToTranches.get(id))
+            .filter(id => Calculation.CALC_RESULT.finalResult.cellToTranches.has(id))
+            .map(id => Calculation.CALC_RESULT.finalResult.cellToTranches.get(id))
             .reduce((arr1, arr2) => [...arr1, ...arr2]);
     }
 

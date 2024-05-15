@@ -1,12 +1,8 @@
+import {Slider} from "./component/Slider.ts";
 import {Constant} from "./Constant.ts";
 import {KEY} from "./data/mapping/key.ts";
-import Slider from "./component/Slider.ts";
 
-namespace State {
-    import Counter = Constant.Counter;
-    import Axis = Constant.Axis;
-    import getRange = Slider.getRange;
-
+export namespace State {
     export const TOTALS:Totals = new Totals();
     export const SLIDERS_STATE:Snapshot = new Snapshot();
 
@@ -22,20 +18,20 @@ namespace State {
             this.y = y;
         }
 
-        getValue(axis: Axis): string {
+        getValue(axis: Constant.Axis): string {
             switch (axis) {
-                case Axis.X:
+                case Constant.Axis.X:
                     return this.x;
-                case Axis.Y:
+                case Constant.Axis.Y:
                     return this.y;
             }
         }
 
-        getComplementValue(axis: Axis): string {
+        getComplementValue(axis: Constant.Axis): string {
             switch (axis) {
-                case Axis.X:
+                case Constant.Axis.X:
                     return this.y;
-                case Axis.Y:
+                case Constant.Axis.Y:
                     return this.x;
             }
         }
@@ -84,30 +80,30 @@ namespace State {
         private _compounds: Limits = new State.Limits(0, 0);
         private _tranches: Limits = new State.Limits(0, 0);
 
-        get(what: Counter): Limits {
-            return what === Counter.COMPOUNDS ? this._compounds : this._tranches;
+        get(what: Constant.Counter): Limits {
+            return what === Constant.Counter.COMPOUNDS ? this._compounds : this._tranches;
         }
 
-        setMax(what: Counter, value: number): void {
-            switch (what) {
-                case Counter.COMPOUNDS: {
+        setMax(counter: Constant.Counter, value: number): void {
+            switch (counter) {
+                case Constant.Counter.COMPOUNDS: {
                     this._compounds = new State.Limits(this._compounds.min, value);
                     break;
                 }
-                case Counter.TRANCHES: {
+                case Constant.Counter.TRANCHES: {
                     this._tranches = new State.Limits(this._tranches.min, value);
                     break;
                 }
             }
         }
 
-        setMin(what: Counter, value: number): void {
-            switch (what) {
-                case Counter.COMPOUNDS: {
+        setMin(counter: Constant.Counter, value: number): void {
+            switch (counter) {
+                case Constant.Counter.COMPOUNDS: {
                     this._compounds = new State.Limits(value, this._compounds.max);
                     break;
                 }
-                case Counter.TRANCHES: {
+                case Constant.Counter.TRANCHES: {
                     this._tranches = new State.Limits(value, this._tranches.max);
                     break;
                 }
@@ -133,7 +129,7 @@ namespace State {
         isNeedRecalculation(axis:AxisValues):boolean {
             const current:ReadonlyMap<string, Limits> = this.currentState(axis);
             for (const [key, val] of this._map) {
-                const currentVal:Limits = current.get(key);
+                const currentVal:Limits|undefined = current.get(key);
                 if (currentVal.min !== val.min || currentVal.max !== val.max) {
                     return true;
                 }
@@ -144,14 +140,14 @@ namespace State {
         private currentState(axis: AxisValues, full: boolean = false):ReadonlyMap<string, Limits> {
             const snapshot: Map<string, Limits> = new Map();
             Array.from(KEY.map.keys())
-                .filter(key => full || (key !== axis.getValue(Axis.X) && key !== axis.getValue(Axis.Y)))
-                .forEach(dimension => snapshot.set(dimension, getRange(dimension).getValidated()));
+                .filter(key => full || (key !== axis.getValue(Constant.Axis.X) && key !== axis.getValue(Constant.Axis.Y)))
+                .forEach(dimension => snapshot.set(dimension, Slider.getRange(dimension).getValidated()));
             return snapshot;
         }
     }
 }
 
-namespace Calculation {
+export namespace Calculation {
 
     export const CALC_RESULT:CalculationResultHolder = new CalculationResultHolder();
 
@@ -164,10 +160,10 @@ namespace Calculation {
         }
 
         tryMerge():void {
-            if (this.calcResults.length > 1) {
-                this.calcResults.push(
-                    this.calcResults.pop().merge(this.calcResults.pop())
-                );
+            const head: CalculationResult | undefined = this.calcResults.pop();
+            const other: CalculationResult | undefined = this.calcResults.pop();
+            if (head !== undefined && other !== undefined) {
+                this.calcResults.push(head.merge(other));
             }
         }
 
@@ -175,7 +171,7 @@ namespace Calculation {
             this.calcResults.push(result);
         }
 
-        get finalResult():Calculation.CalculationResult {
+        get finalResult():Calculation.CalculationResult|undefined {
             if (this.calcResults.length === 1) {
                 this._finalResult = this.calcResults.pop();
             }
