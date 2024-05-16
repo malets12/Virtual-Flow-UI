@@ -1,17 +1,11 @@
 import {Constant} from "../../Constant.ts";
 import {State, Calculation} from "../../State.ts";
 
-export namespace Message {
-    import WorkerAction = Constant.WorkerAction;
-    import AxisValues = State.AxisValues;
-    import Limits = State.Limits;
-    import Source = Constant.Source;
-    import CalculationResult = Calculation.CalculationResult;
-
+export namespace Message { //TODO rename lower classes
     abstract class ActionMessage {
-        private readonly _action: WorkerAction;
+        private readonly _action: Constant.WorkerAction;
 
-        protected constructor(action: WorkerAction) {
+        protected constructor(action: Constant.WorkerAction) {
             this._action = action;
         }
 
@@ -24,21 +18,21 @@ export namespace Message {
         readonly jsonUrl: string;
 
         constructor(jsonUrl: string) {
-            super(WorkerAction.LOAD);
+            super(Constant.WorkerAction.LOAD);
             this.jsonUrl = jsonUrl;
         }
     }
 
     export class CalculationRequestMessage extends ActionMessage {
         private readonly _isInit:boolean;
-        private readonly _axis:AxisValues;
-        private readonly _possibleValues:ReadonlyMap<string, Limits>;
+        private readonly _axis:State.AxisValues;
+        private readonly _possibleValues:ReadonlyMap<string, State.Limits>;
         private readonly _notSelectedDimensions:ReadonlyArray<string>;
 
-        constructor(isInit:boolean, axis:AxisValues,
-                    possibleValues:ReadonlyMap<string, Limits>,
+        constructor(isInit:boolean, axis:State.AxisValues,
+                    possibleValues:ReadonlyMap<string, State.Limits>,
                     notSelectedDimensions:ReadonlyArray<string>) {
-            super(WorkerAction.CALCULATE);
+            super(Constant.WorkerAction.CALCULATE);
             this._isInit = isInit;
             this._axis = axis;
             this._possibleValues = possibleValues;
@@ -50,11 +44,11 @@ export namespace Message {
             return this._isInit;
         }
 
-        get axis(): AxisValues {
+        get axis(): State.AxisValues {
             return this._axis;
         }
 
-        get possibleValues(): ReadonlyMap<string, Limits> {
+        get possibleValues(): ReadonlyMap<string, State.Limits> {
             return this._possibleValues;
         }
 
@@ -66,7 +60,7 @@ export namespace Message {
     export class WorkerMessage extends ActionMessage {
         private readonly _from: string;
 
-        constructor(action: WorkerAction, from: string) {
+        constructor(action: Constant.WorkerAction, from: string) {
             super(action);
             this._from = from;
         }
@@ -77,12 +71,12 @@ export namespace Message {
     }
 
     export class LoadCompleteMessage extends WorkerMessage {
-        private readonly _source:Source;
+        private readonly _source:Constant.Source;
         private readonly _name:string;
         private readonly _bytes?:ArrayBuffer;
 
-        constructor(from:string, source:Source, name:string, bytes?:ArrayBuffer) {
-            super(WorkerAction.LOAD, from);
+        constructor(from:string, source:Constant.Source, name:string, bytes?:ArrayBuffer) {
+            super(Constant.WorkerAction.LOAD, from);
             this._source = source;
             this._name = name;
             this._bytes = bytes;
@@ -103,14 +97,14 @@ export namespace Message {
     }
 
     export class CalculationDoneMessage extends WorkerMessage {
-        private readonly _data:CalculationResult;
+        private readonly _data:Calculation.CalculationResult;
 
-        constructor(from: string, data: CalculationResult) {
-            super(WorkerAction.CALCULATE, from)
+        constructor(from: string, data: Calculation.CalculationResult) {
+            super(Constant.WorkerAction.CALCULATE, from)
             this._data = data;
         }
 
-        get data(): CalculationResult {
+        get data(): Calculation.CalculationResult {
             return this._data;
         }
     }
@@ -119,7 +113,7 @@ export namespace Message {
         private readonly _result:string;
 
         constructor(from: string, result: string) {
-            super(WorkerAction.SAVE_COMPLETE, from);
+            super(Constant.WorkerAction.SAVE_COMPLETE, from);
             this._result = result;
         }
 

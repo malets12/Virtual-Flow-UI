@@ -8,14 +8,26 @@ export const Download: { PowerShell: DownloadMethod; URLs: DownloadMethod; wget:
 }
 
 class DownloadMethod {
-    readonly tool: string;
-    readonly extension: string;
-    readonly template: string;
+    private readonly _tool: string;
+    private readonly _extension: string;
+    private readonly _template: string;
 
     constructor(tool: string, extension: string, template: string) {
-        this.tool = tool;
-        this.extension = extension;
-        this.template = template;
+        this._tool = tool;
+        this._extension = extension;
+        this._template = template;
+    }
+
+    get tool(): string {
+        return this._tool;
+    }
+
+    get extension(): string {
+        return this._extension;
+    }
+
+    get template(): string {
+        return this._template;
     }
 }
 

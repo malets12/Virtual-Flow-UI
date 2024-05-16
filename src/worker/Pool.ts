@@ -8,11 +8,7 @@ export namespace Pool {
     export const WORK_QUEUE:WorkQueue = new WorkQueue();
 
     class WorkerPool {
-        private readonly workers:Map<string, Worker>;
-
-        constructor() {
-            this.workers = new Map();
-        }
+        private readonly workers:Map<string, Worker> = new Map();
 
         async init(callback:(msg:any) => Promise<void>):Promise<void> {
             const loadFromDB:boolean = LocalStorage.hasLocalCopy();
@@ -47,11 +43,7 @@ export namespace Pool {
     }
 
     class WorkQueue {
-        private readonly queue:Array<Message.LoadRequestMessage>;
-
-        constructor() {
-            this.queue = [];
-        }
+        private readonly queue:Array<Message.LoadRequestMessage> = [];
 
         async pop():Promise<Message.LoadRequestMessage|undefined> {
             return this.queue.pop();
@@ -69,24 +61,21 @@ export namespace Pool {
 }
 
 export namespace Saver {
-    import LoadCompleteMessage = Message.LoadCompleteMessage;
-    import newDatabaseSaver = JSWorkerFactory.newDatabaseSaver;
-    import markHasLocalCopy = LocalStorage.markHasLocalCopy;
-    export const SAVER = new Saver();
+    export const SAVER:BackgroundSaver = new BackgroundSaver();
 
-    class Saver {
-        private readonly jsonsAsByteArrays:Array<LoadCompleteMessage> = [];
+    class BackgroundSaver {
+        private readonly jsonsAsByteArrays:Array<Message.LoadCompleteMessage> = [];
 
         async saveAll():Promise<void> {
-            newDatabaseSaver(async (message:any):Promise<void> => {
+            JSWorkerFactory.newDatabaseSaver(async (message:any):Promise<void> => {
                 console.log(`${message.from}: ${message.result}`);
-                markHasLocalCopy();
-            }).then(namedWorker => namedWorker.worker
-                .postMessage(this.jsonsAsByteArrays, [this.jsonsAsByteArrays])) //transfer
+                LocalStorage.markHasLocalCopy();
+            }).then(namedWorker => namedWorker.worker.postMessage(this.jsonsAsByteArrays))
+                .finally(() => this.jsonsAsByteArrays.length = 0);
             //TODO load collections?
         }
 
-        async add(message:LoadCompleteMessage):Promise<void> {
+        async add(message:Message.LoadCompleteMessage):Promise<void> {
             this.jsonsAsByteArrays.push(message);
         }
     }

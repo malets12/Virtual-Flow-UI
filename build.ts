@@ -19,4 +19,6 @@ for (const log of build.logs) {
 }
 
 const indexFile = Bun.file("./src/index.html");
+const stylesFile = Bun.file("./src/styles.css");
 await Bun.write("./out/index.html", indexFile);
+await Bun.write("./out/styles.css", stylesFile);

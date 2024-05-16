@@ -1,19 +1,17 @@
-import Message from "./infrastructure/Message.ts";
-import LoadRequestMessage = Message.LoadRequestMessage;
-import CalculationRequestMessage = Message.CalculationRequestMessage;
 import {Constant} from "../Constant.ts";
-import WorkerAction = Constant.WorkerAction;
+import type DatabaseLoadCounter from "./infrastructure/DatabaseLoadCounter.ts";
+import {Message} from "./infrastructure/Message.ts";
 
-const worker:DatabaseWorker = new DatabaseWorker(self.name);
+const worker:DatabaseLoadCounter = new DatabaseLoadCounter(self.name);
 self.addEventListener("message", async (msg:any): Promise<void> => {
-	const message:LoadRequestMessage|CalculationRequestMessage = msg.data;
+	const message:Message.LoadRequestMessage|Message.CalculationRequestMessage = msg.data;
 	switch (message.action) {
-		case WorkerAction.LOAD: {
-			worker.load(message as LoadRequestMessage).then(result => self.postMessage(result));
+		case Constant.WorkerAction.LOAD: {
+			worker.load(message as Message.LoadRequestMessage).then(result => self.postMessage(result));
 			break;
 		}
-		case WorkerAction.CALCULATE: {
-			worker.calculate(message as CalculationRequestMessage).then(result => self.postMessage(result));
+		case Constant.WorkerAction.CALCULATE: {
+			worker.calculate(message as Message.CalculationRequestMessage).then(result => self.postMessage(result));
 			break;
 		}
 	}

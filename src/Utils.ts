@@ -2,9 +2,9 @@ export function replaceAll(str:string, find:string, replace:string) {
     return str.replace(new RegExp(find.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1"), 'g'), replace);
 }
 
-export function objToStrMap<K, V>(obj: [K, V]): Map<K, V> {
-    const result:Map<K, V> = new Map();
-    for (const entry:[K, V] of Object.entries(obj)) {
+export function objToStrMap<V>(obj: { [s: string]: V }): Map<string, V> {
+    const result:Map<string, V> = new Map();
+    for (const entry:[string, V] of Object.entries(obj)) {
         result.set(entry[0], entry[1])
     }
     return result;
