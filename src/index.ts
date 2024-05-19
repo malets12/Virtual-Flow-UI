@@ -13,10 +13,10 @@ import {Pool, Saver} from "./worker/Pool.ts";
 (async (): Promise<void> => {
     //Functions for init
     const callback = async (msg: any): Promise<void> => {
-        const message: Message.WorkerMessage | Message.LoadCompleteMessage | Message.CalculationDoneMessage = msg.data;
+        const message: Message.WorkerMessage | Message.LoadComplete | Message.CalculationDone = msg.data;
         switch (message.action) {
             case Constant.WorkerAction.LOAD: {
-                const loadMessage: Message.LoadCompleteMessage = message as Message.LoadCompleteMessage;
+                const loadMessage: Message.LoadComplete = message as Message.LoadComplete;
                 loadCounter++;
                 switch (loadMessage.source) {
                     case Constant.Source.NETWORK: {
@@ -42,7 +42,7 @@ import {Pool, Saver} from "./worker/Pool.ts";
                 break;
             }
             case Constant.WorkerAction.CALCULATE: {
-                const calcMessage: Message.CalculationDoneMessage = message as Message.CalculationDoneMessage;
+                const calcMessage: Message.CalculationDone = message as Message.CalculationDone;
                 calcCounter++;
                 console.log(`${calcMessage.from}: calculation done.`);
                 Calculation.CALC_RESULT.addResult(calcMessage.data);
@@ -65,7 +65,7 @@ import {Pool, Saver} from "./worker/Pool.ts";
     let calcCounter: number = 0;
     const init:Array<Promise<void>> = [];
     for (let i: number = 0; i < Constant.PARTS; i++) {
-        init.push(Pool.WORK_QUEUE.push(new Message.LoadRequestMessage(`tranche${i}.json`)));
+        init.push(Pool.WORK_QUEUE.push(new Message.LoadRequest(`tranche${i}.json`)));
     }
     Promise.all(init).then(() => Pool.WORKER_POOL.init(callback));
 })();
@@ -100,17 +100,17 @@ function renderValues(axis: State.AxisValues, isInit: boolean = false): void {
     Loader.showLoader();
     State.SLIDERS_STATE.saveNew(axis);
     const notSelectedDimensions: ReadonlyArray<string> = Array.from(State.SLIDERS_STATE.map.keys());
-    const possibleValues: Map<string, State.Limits> = new Map();
+    const possibleValues: Map<string, State.Range> = new Map();
     if (!isInit) {
         for (const dimension: string of notSelectedDimensions) {
-            const limits: State.Limits | undefined = State.SLIDERS_STATE.map.get(dimension);
+            const limits: State.Range | undefined = State.SLIDERS_STATE.map.get(dimension);
             if (limits !== undefined) {
                 const isZeroDimension: boolean = KEY.dimensionsWithZero.has(dimension);
                 if (limits.min === limits.max && !isZeroDimension) {
                     throw "Illegal state: this limit is not allowed";
                 }
                 if (isZeroDimension) {
-                    possibleValues.set(dimension, new State.Limits(limits.min - 1, limits.max));
+                    possibleValues.set(dimension, new State.Range(limits.min - 1, limits.max));
                 } else {
                     possibleValues.set(dimension, limits);
                 }
@@ -124,7 +124,7 @@ function renderValues(axis: State.AxisValues, isInit: boolean = false): void {
             element.setAttribute("num", "0");
         }
     }
-    Pool.WORKER_POOL.notifyAll(new Message.CalculationRequestMessage(isInit, axis, possibleValues, notSelectedDimensions));
+    Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, notSelectedDimensions));
 }
 
 function fillCells(result: Calculation.CalculationResult): void {
@@ -186,7 +186,7 @@ function fillCellsWithRowAndColumnSums(results: Calculation.CalculationResult): 
 
 function removePrevious(): void {
     //Remove previous data
-    ["table", "info_wrapper", "controls_wrapper", "download", "downloadC"]
+    ["table", "info_wrapper", "controls_wrapper", "download", "downloadC"] //TODO enum
         .map(id => document.getElementById(id))
         .filter(element => element !== null)
         .forEach(element => element.remove());

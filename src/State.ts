@@ -37,7 +37,7 @@ export namespace State {
         }
     }
 
-    export class Limits { //TODO rename as Range
+    export class Range {
         private readonly _min: number;
         private readonly _max: number;
 
@@ -50,9 +50,9 @@ export namespace State {
             return this._min > this._max;
         }
 
-        getValidated(): Limits {
+        getValidated(): Range {
             if (this.isNotValid()) {
-                return new Limits(this._max, this._min);
+                return new Range(this._max, this._min);
             } else {
                 return this;
             }
@@ -77,21 +77,21 @@ export namespace State {
     }
 
     class Totals {
-        private _compounds: Limits = new Limits(0, 0);
-        private _tranches: Limits = new Limits(0, 0);
+        private _compounds: Range = new Range(0, 0);
+        private _tranches: Range = new Range(0, 0);
 
-        get(what: Constant.Counter): Limits {
+        get(what: Constant.Counter): Range {
             return what === Constant.Counter.COMPOUNDS ? this._compounds : this._tranches;
         }
 
         setMax(counter: Constant.Counter, value: number): void {
             switch (counter) {
                 case Constant.Counter.COMPOUNDS: {
-                    this._compounds = new Limits(this._compounds.min, value);
+                    this._compounds = new Range(this._compounds.min, value);
                     break;
                 }
                 case Constant.Counter.TRANCHES: {
-                    this._tranches = new Limits(this._tranches.min, value);
+                    this._tranches = new Range(this._tranches.min, value);
                     break;
                 }
             }
@@ -100,11 +100,11 @@ export namespace State {
         setMin(counter: Constant.Counter, value: number): void {
             switch (counter) {
                 case Constant.Counter.COMPOUNDS: {
-                    this._compounds = new Limits(value, this._compounds.max);
+                    this._compounds = new Range(value, this._compounds.max);
                     break;
                 }
                 case Constant.Counter.TRANCHES: {
-                    this._tranches = new Limits(value, this._tranches.max);
+                    this._tranches = new Range(value, this._tranches.max);
                     break;
                 }
             }
@@ -112,9 +112,9 @@ export namespace State {
     }
 
     class Snapshot {
-        private _map: ReadonlyMap<string, Limits> = new Map();
+        private _map: ReadonlyMap<string, Range> = new Map();
 
-        get map(): ReadonlyMap<string, Limits> {
+        get map(): ReadonlyMap<string, Range> {
             return this._map;
         }
 
@@ -123,9 +123,9 @@ export namespace State {
         }
 
         isNeedRecalculation(axis: AxisValues): boolean {
-            const current: ReadonlyMap<string, Limits> = this.currentState(axis);
-            for (const [key, val]: [string, Limits] of this._map) {
-                const currentVal: Limits | undefined = current.get(key);
+            const current: ReadonlyMap<string, Range> = this.currentState(axis);
+            for (const [key, val]: [string, Range] of this._map) {
+                const currentVal: Range | undefined = current.get(key);
                 if (currentVal?.min !== val.min || currentVal?.max !== val.max) {
                     return true;
                 }
@@ -133,8 +133,8 @@ export namespace State {
             return false;
         }
 
-        private currentState(axis: AxisValues, full: boolean = false): ReadonlyMap<string, Limits> {
-            const snapshot: Map<string, Limits> = new Map();
+        private currentState(axis: AxisValues, full: boolean = false): ReadonlyMap<string, Range> {
+            const snapshot: Map<string, Range> = new Map();
             Array.from(KEY.map.keys())
                 .filter(key => full || (key !== axis.getValue(Constant.Axis.X) && key !== axis.getValue(Constant.Axis.Y)))
                 .forEach(dimension => snapshot.set(dimension, Slider.getRange(dimension).getValidated()));

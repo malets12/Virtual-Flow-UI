@@ -35,7 +35,7 @@ export namespace Pool {
             });
         }
 
-        async notifyAll(message:Message.CalculationRequestMessage):Promise<void> {
+        async notifyAll(message:Message.CalculationRequest):Promise<void> {
             for (const worker:Worker of this.workers.values()) {
                 worker.postMessage(message);
             }
@@ -43,13 +43,13 @@ export namespace Pool {
     }
 
     class WorkQueue {
-        private readonly queue:Array<Message.LoadRequestMessage> = [];
+        private readonly queue:Array<Message.LoadRequest> = [];
 
-        async pop():Promise<Message.LoadRequestMessage|undefined> {
+        async pop():Promise<Message.LoadRequest|undefined> {
             return this.queue.pop();
         }
 
-        async push(message:Message.LoadRequestMessage):Promise<void> {
+        async push(message:Message.LoadRequest):Promise<void> {
             this.queue.push(message);
         }
 
@@ -64,7 +64,7 @@ export namespace Saver {
     export const SAVER:BackgroundSaver = new BackgroundSaver();
 
     class BackgroundSaver {
-        private readonly jsonsAsByteArrays:Array<Message.LoadCompleteMessage> = [];
+        private readonly jsonsAsByteArrays:Array<Message.LoadComplete> = [];
 
         async saveAll():Promise<void> {
             JSWorkerFactory.newDatabaseSaver(async (message:any):Promise<void> => {
@@ -72,10 +72,10 @@ export namespace Saver {
                 LocalStorage.markHasLocalCopy();
             }).then(namedWorker => namedWorker.worker.postMessage(this.jsonsAsByteArrays))
                 .finally(() => this.jsonsAsByteArrays.length = 0);
-            //TODO load collections?
+            //TODO? load collections
         }
 
-        async add(message:Message.LoadCompleteMessage):Promise<void> {
+        async add(message:Message.LoadComplete):Promise<void> {
             this.jsonsAsByteArrays.push(message);
         }
     }

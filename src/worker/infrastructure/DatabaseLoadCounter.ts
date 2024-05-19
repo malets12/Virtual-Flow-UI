@@ -16,13 +16,13 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
         this.errorMessage = new Message.WorkerMessage(Constant.WorkerAction.RELOAD, label);
     }
 
-    async calculate(requestMessage:Message.CalculationRequestMessage):Promise<Message.CalculationDoneMessage> {
-        return super.calculatePart(requestMessage).then(result => new Message.CalculationDoneMessage(this.label, result));
+    async calculate(requestMessage:Message.CalculationRequest):Promise<Message.CalculationDone> {
+        return super.calculatePart(requestMessage).then(result => new Message.CalculationDone(this.label, result));
     }
 
-    async load(loadMessage:Message.LoadRequestMessage):Promise<Message.LoadCompleteMessage | Message.WorkerMessage> {
+    async load(loadMessage:Message.LoadRequest):Promise<Message.LoadComplete | Message.WorkerMessage> {
         const req:IDBOpenDBRequest = indexedDB.open(Constant.Database.NAME, Constant.Database.VERSION);
-        req.onsuccess = ():Promise<Message.LoadCompleteMessage> => {
+        req.onsuccess = ():Promise<Message.LoadComplete> => {
             const db:IDBDatabase = req.result;
             console.log(`${this.label}: DB init done, looking for ${loadMessage.jsonUrl}`);
             return this.getDBEntry(db, loadMessage.jsonUrl);
@@ -37,15 +37,15 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
         };
     }
 
-    private async getDBEntry(db:IDBDatabase, key:string):Promise<Message.LoadCompleteMessage | Message.WorkerMessage> {
+    private async getDBEntry(db:IDBDatabase, key:string):Promise<Message.LoadComplete | Message.WorkerMessage> {
         const request:IDBRequest = db.transaction(Constant.Database.STORE_NAME, "readonly")
             .objectStore(Constant.Database.STORE_NAME)
             .get(key);
-        request.onsuccess = (event:Event):Message.LoadCompleteMessage | Message.WorkerMessage =>  {
+        request.onsuccess = (event:Event):Message.LoadComplete | Message.WorkerMessage =>  {
             const result = event.target.result; //TODO
             if (result) {
                 this.JSONS.push(JSON.parse(new TextDecoder().decode(result.bytes)));
-                return new Message.LoadCompleteMessage(this.label, this.source, key);
+                return new Message.LoadComplete(this.label, this.source, key);
             }
             else {
                 console.error(`${this.label}: no JSON for ${key}`, event.target);

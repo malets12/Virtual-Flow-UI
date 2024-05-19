@@ -1,7 +1,7 @@
 import {Constant} from "../../Constant.ts";
 import {State, Calculation} from "../../State.ts";
 
-export namespace Message { //TODO rename lower classes
+export namespace Message {
     abstract class ActionMessage {
         private readonly _action: Constant.WorkerAction;
 
@@ -14,7 +14,7 @@ export namespace Message { //TODO rename lower classes
         }
     }
 
-    export class LoadRequestMessage extends ActionMessage {
+    export class LoadRequest extends ActionMessage {
         readonly jsonUrl: string;
 
         constructor(jsonUrl: string) {
@@ -23,14 +23,14 @@ export namespace Message { //TODO rename lower classes
         }
     }
 
-    export class CalculationRequestMessage extends ActionMessage {
+    export class CalculationRequest extends ActionMessage {
         private readonly _isInit:boolean;
         private readonly _axis:State.AxisValues;
-        private readonly _possibleValues:ReadonlyMap<string, State.Limits>;
+        private readonly _possibleValues:ReadonlyMap<string, State.Range>;
         private readonly _notSelectedDimensions:ReadonlyArray<string>;
 
         constructor(isInit:boolean, axis:State.AxisValues,
-                    possibleValues:ReadonlyMap<string, State.Limits>,
+                    possibleValues:ReadonlyMap<string, State.Range>,
                     notSelectedDimensions:ReadonlyArray<string>) {
             super(Constant.WorkerAction.CALCULATE);
             this._isInit = isInit;
@@ -48,7 +48,7 @@ export namespace Message { //TODO rename lower classes
             return this._axis;
         }
 
-        get possibleValues(): ReadonlyMap<string, State.Limits> {
+        get possibleValues(): ReadonlyMap<string, State.Range> {
             return this._possibleValues;
         }
 
@@ -70,7 +70,7 @@ export namespace Message { //TODO rename lower classes
         }
     }
 
-    export class LoadCompleteMessage extends WorkerMessage {
+    export class LoadComplete extends WorkerMessage {
         private readonly _source:Constant.Source;
         private readonly _name:string;
         private readonly _bytes?:ArrayBuffer;
@@ -96,7 +96,7 @@ export namespace Message { //TODO rename lower classes
         }
     }
 
-    export class CalculationDoneMessage extends WorkerMessage {
+    export class CalculationDone extends WorkerMessage {
         private readonly _data:Calculation.CalculationResult;
 
         constructor(from: string, data: Calculation.CalculationResult) {
@@ -109,7 +109,7 @@ export namespace Message { //TODO rename lower classes
         }
     }
 
-    export class SaveMessage extends WorkerMessage {
+    export class Save extends WorkerMessage {
         private readonly _result:string;
 
         constructor(from: string, result: string) {

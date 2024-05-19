@@ -18,10 +18,10 @@ self.addEventListener("message", async (msg:any):Promise<void> => {
 	};
 }, false);
 
-function addDBEntry(db:IDBDatabase, jsons:ReadonlyArray<Message.LoadCompleteMessage>):void {
+function addDBEntry(db:IDBDatabase, jsons:ReadonlyArray<Message.LoadComplete>):void {
 	const transaction:IDBTransaction = db.transaction(Constant.Database.STORE_NAME, "readwrite");
 	transaction.oncomplete = ():void => {
-		self.postMessage(new Message.SaveMessage(self.name, "Successfully saved to DB."));
+		self.postMessage(new Message.Save(self.name, "Successfully saved to DB."));
 		self.close();
 	};
 	transaction.onerror = (event:Event):void => {

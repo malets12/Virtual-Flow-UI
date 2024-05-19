@@ -6,11 +6,11 @@ import {Message} from "./Message.ts";
 export type Tranche = { [s: string]: number };
 
 export interface Loader {
-    load(loadMessage: Message.LoadRequestMessage): Promise<Message.LoadCompleteMessage | Message.WorkerMessage>;
+    load(loadMessage: Message.LoadRequest): Promise<Message.LoadComplete | Message.WorkerMessage>;
 }
 
 export interface Calculator {
-    calculate(requestMessage: Message.CalculationRequestMessage): Promise<Message.CalculationDoneMessage>;
+    calculate(requestMessage: Message.CalculationRequest): Promise<Message.CalculationDone>;
 }
 
 export abstract class AsyncCalculator {
@@ -18,7 +18,7 @@ export abstract class AsyncCalculator {
     abstract readonly label: string;
     abstract readonly source: Constant.Source;
 
-    protected async calculatePart(requestMessage: Message.CalculationRequestMessage): Promise<Calculation.CalculationResult> {
+    protected async calculatePart(requestMessage: Message.CalculationRequest): Promise<Calculation.CalculationResult> {
         const cellCounts: Map<string, number> = new Map();
         const cellToTranches: Map<string, Array<string>> = new Map();
         let totalTranches: number = 0;
@@ -34,7 +34,7 @@ export abstract class AsyncCalculator {
                 if (!requestMessage.isInit) {
                     add = requestMessage.notSelectedDimensions.every(dimension => {
                         const pos_param: number | undefined = ORDER.map.get(dimension);
-                        const limits: State.Limits | undefined = requestMessage.possibleValues.get(dimension);
+                        const limits: State.Range | undefined = requestMessage.possibleValues.get(dimension);
                         const int: number = this.toInt(key.substring(pos_param - 1, pos_param));
                         return limits?.matches(int);
                     });
