@@ -1,3 +1,7 @@
+import {Downloads} from "./component/Downloads.ts";
+import {Table} from "./component/Table.ts";
+import {Wrapper} from "./component/Wrapper.ts";
+
 export function replaceAll(str:string, find:string, replace:string) {
     return str.replace(new RegExp(find.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1"), 'g'), replace);
 }
@@ -30,24 +34,10 @@ export function doFullReload():void {
     location.reload();
 }
 
-export namespace LocalStorage {
-    const LOCAL_COPY:string = "tranchesLocalCopy";
-    export function markHasLocalCopy():void {
-        window.localStorage.setItem(LOCAL_COPY, "true");
-    }
-
-    export function hasLocalCopy():boolean {
-        return window.localStorage.getItem(LOCAL_COPY) === "true";
-    }
-}
-
-export namespace Loader {
-    const LOADER:string = "loader";
-    export function showLoader():void {
-        document.getElementById(LOADER).style.display = "block"; //TODO check
-    }
-
-    export function hideLoader():void {
-        document.getElementById(LOADER).style.display = "none";
-    }
+export function removePrevious(): void {
+    //Remove previous data
+    [Table.ID, Wrapper.INFO_ID, Wrapper.CONTROLS_ID, Downloads.ID, Downloads.COLLECTIONS_ID]
+        .map(id => document.getElementById(id))
+        .filter(element => element !== null)
+        .forEach(element => element.remove());
 }

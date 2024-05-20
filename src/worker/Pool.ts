@@ -1,5 +1,5 @@
+import {LocalStorage} from "../component/LocalStorage.ts";
 import {Constant} from "../Constant.ts";
-import {LocalStorage} from "../Utils.ts";
 import {Message} from "./infrastructure/Message.ts";
 import {JSWorkerFactory} from "./WorkerFactory.ts";
 

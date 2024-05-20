@@ -1,6 +1,7 @@
 import {Constant} from "../Constant.ts";
 import {KEY} from "../data/mapping/key.ts";
 import {State} from "../State.ts";
+import {Values} from "../Values.ts";
 
 export namespace AxisSelector {
     import Axis = Constant.Axis;
@@ -41,6 +42,12 @@ export namespace AxisSelector {
         const selectY:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById("select_y");
         if (selectY !== null) {
             selectY.value = values.getValue(Axis.X);
+        }
+    }
+
+    export function addChangeListener(): void {
+        for (const axisSelector: HTMLElement of document.getElementsByClassName("axis_selector")) {
+            axisSelector.addEventListener("change", () => Values.render(AxisSelector.getAxisValues()));
         }
     }
 }
