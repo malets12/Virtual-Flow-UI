@@ -3,9 +3,6 @@ import {Constant} from "./Constant.ts";
 import {KEY} from "./data/mapping/key.ts";
 
 export namespace State {
-    export const TOTALS: Totals = new Totals();
-    export const SLIDERS_STATE: Snapshot = new Snapshot();
-
     export class AxisValues {
         private readonly x: string;
         private readonly y: string;
@@ -141,12 +138,12 @@ export namespace State {
             return snapshot;
         }
     }
+
+    export const TOTALS: Totals = new Totals();
+    export const SLIDERS_STATE: Snapshot = new Snapshot();
 }
 
 export namespace Calculation {
-
-    export const CALC_RESULT: CalculationResultHolder = new CalculationResultHolder();
-
     export class CalculationResultHolder {
         private readonly calcResults: Array<CalculationResult> = [];
         private _finalResult?: CalculationResult;
@@ -170,6 +167,8 @@ export namespace Calculation {
             return this._finalResult;
         }
     }
+
+    export const CALC_RESULT: CalculationResultHolder = new CalculationResultHolder();
 
     export class CalculationResult {
         private readonly _cellCounts: Map<string, number>;
@@ -217,11 +216,11 @@ export namespace Calculation {
             return this._totalCompounds;
         }
 
-        get cellCounts(): Map<string, number> {
+        get cellCounts(): ReadonlyMap<string, number> {
             return this._cellCounts;
         }
 
-        get cellToTranches(): Map<string, Array<string>> {
+        get cellToTranches(): ReadonlyMap<string, Array<string>> {
             return this._cellToTranches;
         }
     }

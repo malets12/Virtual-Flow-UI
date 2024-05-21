@@ -21,6 +21,8 @@ class Color {
             20000000000: "grad14",
             50000000000: "grad15"
         };
+        this.map = new Map();
+        this.limits = [];
         for (const [key, val]: [string, string] of Object.entries(colors)) {
             const num: number = parseInt(key);
             this.map.set(num, val);

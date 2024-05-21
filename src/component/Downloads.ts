@@ -35,27 +35,27 @@ export namespace Downloads {
             //Find selected tranches
             const methodSelector: HTMLInputElement = <HTMLInputElement>document.getElementById("DMethod");
             const method: string = methodSelector.value;
-            const str: string = Download[method].tool;
-            const ext: string = Download[method].extension;
+            const template: string = Download[method].template;
+            const extension: string = Download[method].extension;
             switch (method) {
                 case "wget": {
                     const regexp: [string, string] = makeRegexp();
-                    const result: string = replaceAll(replaceAll(replaceAll(str,
+                    const result: string = replaceAll(replaceAll(replaceAll(template,
                                 DownloadTemplateMapping.tranch, regexp[1]),
                             DownloadTemplateMapping.meta, regexp[0]),
                         DownloadTemplateMapping.root, replaceAll(d_root, ".", "\\."));
-                    createFile([result], `tranches${ext}`);
+                    createFile([result], `tranches${extension}`);
                     break;
                 }
                 default: {
                     const s: Array<string> = [];
                     for (const tranche: string of findInbox()) {
-                        let f: string = replaceAll(str, DownloadTemplateMapping.tranch, tranche);
+                        let f: string = replaceAll(template, DownloadTemplateMapping.tranch, tranche);
                         f = replaceAll(f, DownloadTemplateMapping.meta, tranche.substring(0, 2));
                         f = replaceAll(f, DownloadTemplateMapping.root, d_root);
                         s.push(f);
                     }
-                    createFile(s, `tranches${ext}`);
+                    createFile(s, `tranches${extension}`);
                 }
             }
         });

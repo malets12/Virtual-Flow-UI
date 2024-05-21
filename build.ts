@@ -7,7 +7,7 @@ const build = await Bun.build({
     ],
     outdir: './out',
     splitting: true,
-    minify: true
+    minify: false
 });
 for (const log of build.logs) {
     if (build.success) {
