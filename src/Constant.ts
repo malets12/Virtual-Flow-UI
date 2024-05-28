@@ -1,10 +1,9 @@
 export namespace Constant {
-    export const ENTRY_ID:string = "container";
-    export const PARTS:number = 24;
-    export const WORKER_COUNT:number = window.navigator.hardwareConcurrency;
-    export const FIRST_COLUMN_SLIDERS:ReadonlyArray<string> = ["MW", "SlogP", "HBA", "HBD", "RotB", "TPSA", "MR", "logS", "AromProportion"];
+    export const ENTRY_ID: string = "container";
+    export const PARTS: number = 24;
+    export const FIRST_COLUMN_SLIDERS: ReadonlyArray<string> = ["MW", "SlogP", "HBA", "HBD", "RotB", "TPSA", "MR", "logS", "AromProportion"];
 
-    export enum WorkerAction { LOAD, CALCULATE , RELOAD, SAVE_COMPLETE}
+    export enum WorkerAction { LOAD, CALCULATE, RELOAD, SAVE_COMPLETE}
 
     export enum Database { NAME = "tranches-db", VERSION = 1, STORE_NAME = "tranches-jsons" }
 

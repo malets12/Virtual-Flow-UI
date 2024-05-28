@@ -11,7 +11,7 @@ export namespace JSWorkerFactory {
 
         protected constructor(fileName: string, callback: (msg: any) => Promise<void>, order: number) {
             this._name = "Worker-" + order;
-            this._worker = new Worker(fileName, {name: this._name});
+            this._worker = new Worker(fileName, { name: this._name, type: "module" });
             this._worker.addEventListener("message", (msg: any) => callback(msg), false);
         }
 

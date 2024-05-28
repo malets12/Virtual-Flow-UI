@@ -4,6 +4,7 @@ import {Message} from "./infrastructure/Message.ts";
 import {JSWorkerFactory} from "./WorkerFactory.ts";
 
 export namespace Pool {
+
     class WorkQueue {
         private readonly queue: Array<Message.LoadRequest> = [];
 
@@ -26,17 +27,21 @@ export namespace Pool {
         private readonly workers: Map<string, Worker> = new Map();
 
         async init(callback: (msg: any) => Promise<void>): Promise<void> {
+            const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
             const loadFromDB: boolean = LocalStorage.hasLocalCopy();
-            for (let i: number = 0; i < Constant.WORKER_COUNT; i++) {
+            const maxPartsPerWorker: number = Constant.PARTS / WORKER_COUNT + 1;
+            for (let i: number = 0; i < WORKER_COUNT; i++) {
                 (loadFromDB ? JSWorkerFactory.newDatabaseLoader(callback, i) : JSWorkerFactory.newNetworkLoader(callback, i))
                     .then(namedWorker => {
                         this.workers.set(namedWorker.name, namedWorker.worker);
-                        WORK_QUEUE.pop()
-                            .then(msg => {
-                                if (msg !== undefined) {
-                                    namedWorker.worker.postMessage(msg);
-                                }
-                            });
+                        for (let part: number = 0; part < maxPartsPerWorker; part++) {
+                            WORK_QUEUE.pop()
+                                .then(msg => {
+                                    if (msg !== undefined) {
+                                        namedWorker.worker.postMessage(msg);
+                                    }
+                                });
+                        }
                     });
             }
         }

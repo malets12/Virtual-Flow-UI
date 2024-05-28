@@ -14,6 +14,7 @@ import {Pool, Saver} from "./worker/Pool.ts";
 
 (async (): Promise<void> => {
     //Functions for init
+    const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
     const callback = async (msg: any): Promise<void> => {
         const message: Message.WorkerMessage | Message.LoadComplete | Message.CalculationDone = msg.data;
         switch (message.action) {
@@ -23,11 +24,11 @@ import {Pool, Saver} from "./worker/Pool.ts";
                 switch (loadMessage.source) {
                     case Constant.Source.NETWORK: {
                         Saver.SAVER.add(loadMessage)
-                            .then(() => console.log(`${loadMessage.from}: JSON from ${loadMessage.name} loaded.`));
+                            .then(() => console.log(loadMessage.from, `JSON from ${loadMessage.name} loaded.`));
                         break;
                     }
                     case Constant.Source.DATABASE: {
-                        console.log(`${loadMessage.from}: JSON ${loadMessage.name} loaded from DB.`);
+                        console.log(loadMessage.from, `JSON ${loadMessage.name} loaded from DB.`);
                         break;
                     }
                 }
@@ -46,10 +47,10 @@ import {Pool, Saver} from "./worker/Pool.ts";
             case Constant.WorkerAction.CALCULATE: {
                 const calcMessage: Message.CalculationDone = message as Message.CalculationDone;
                 calcCounter++;
-                console.log(`${calcMessage.from}: calculation done.`);
+                console.log(calcMessage.from, `Calculation done.`);
                 Calculation.CALC_RESULT.addResult(calcMessage.data);
                 Calculation.CALC_RESULT.tryMerge();
-                if (calcCounter === Constant.WORKER_COUNT && Calculation.CALC_RESULT.finalResult !== undefined) {
+                if (calcCounter === WORKER_COUNT && Calculation.CALC_RESULT.finalResult !== undefined) {
                     console.log("Full calculation done!");
                     Values.fillCells(Calculation.CALC_RESULT.finalResult);
                     calcCounter = 0;
@@ -65,7 +66,7 @@ import {Pool, Saver} from "./worker/Pool.ts";
     //Init logic
     let loadCounter: number = 0;
     let calcCounter: number = 0;
-    const init:Array<Promise<void>> = [];
+    const init: Array<Promise<void>> = [];
     for (let i: number = 0; i < Constant.PARTS; i++) {
         init.push(Pool.WORK_QUEUE.push(new Message.LoadRequest(`tranche/tranche${i}.json`)));
     }

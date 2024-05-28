@@ -1,3 +1,11 @@
+import { unlinkSync } from "node:fs";
+
+const jsGlob = new Bun.Glob("*.js");
+const outdir = "./out";
+for await (const fileName: string of jsGlob.scan(outdir)) {
+    unlinkSync(`${outdir}/${fileName}`);
+}
+
 const build = await Bun.build({
     entrypoints: [
         './src/index.ts',
@@ -5,7 +13,7 @@ const build = await Bun.build({
         './src/worker/FetchAndCountJsWorker.ts',
         './src/worker/LoadFromDbAndCountJsWorker.ts'
     ],
-    outdir: './out',
+    outdir: outdir,
     splitting: true,
     minify: false
 });
@@ -22,9 +30,9 @@ const stylesFile = Bun.file("./src/styles.css");
 await Bun.write("./out/index.html", indexFile);
 await Bun.write("./out/styles.css", stylesFile);
 
-const glob = new Bun.Glob("*.json");
+const jsonGlob = new Bun.Glob("*.json");
 const jsonDir = "./src/data/tranche";
-for await (const fileName: string of glob.scan(jsonDir)) {
+for await (const fileName: string of jsonGlob.scan(jsonDir)) {
     const jsonFile = Bun.file(`${jsonDir}/${fileName}`);
-    await Bun.write(`./out/tranche/${fileName}`, jsonFile);
+    await Bun.write(`./out/worker/tranche/${fileName}`, jsonFile);
 }
