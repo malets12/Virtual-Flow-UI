@@ -20,14 +20,14 @@ export namespace Message {
     }
 
     export class CalculationRequest extends ActionMessage {
-        readonly isInit:boolean;
-        readonly axis:State.AxisValues;
-        readonly possibleValues:ReadonlyMap<string, State.Range>;
-        readonly notSelectedDimensions:ReadonlyArray<string>;
+        readonly isInit: boolean;
+        readonly axis: State.AxisValues;
+        readonly possibleValues: ReadonlyMap<string, State.Range>;
+        readonly notSelectedDimensions: ReadonlyArray<string>;
 
-        constructor(isInit:boolean, axis:State.AxisValues,
-                    possibleValues:ReadonlyMap<string, State.Range>,
-                    notSelectedDimensions:ReadonlyArray<string>) {
+        constructor(isInit: boolean, axis: State.AxisValues,
+                    possibleValues: ReadonlyMap<string, State.Range>,
+                    notSelectedDimensions: ReadonlyArray<string>) {
             super(Constant.WorkerAction.CALCULATE);
             this.isInit = isInit;
             this.axis = axis;
@@ -46,11 +46,11 @@ export namespace Message {
     }
 
     export class LoadComplete extends WorkerMessage {
-        readonly source:Constant.Source;
-        readonly name:string;
-        readonly bytes?:ArrayBuffer;
+        readonly source: Constant.Source;
+        readonly name: string;
+        readonly bytes?: ArrayBuffer;
 
-        constructor(from:string, source:Constant.Source, name:string, bytes?:ArrayBuffer) {
+        constructor(from: string, source: Constant.Source, name: string, bytes?: ArrayBuffer) {
             super(Constant.WorkerAction.LOAD, from);
             this.source = source;
             this.name = name;
@@ -59,7 +59,7 @@ export namespace Message {
     }
 
     export class CalculationDone extends WorkerMessage {
-        readonly data:Calculation.CalculationResult;
+        readonly data: Calculation.CalculationResult;
 
         constructor(from: string, data: Calculation.CalculationResult) {
             super(Constant.WorkerAction.CALCULATE, from)
@@ -68,7 +68,7 @@ export namespace Message {
     }
 
     export class Save extends WorkerMessage {
-        readonly result:string;
+        readonly result: string;
 
         constructor(from: string, result: string) {
             super(Constant.WorkerAction.SAVE_COMPLETE, from);

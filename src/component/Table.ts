@@ -8,8 +8,8 @@ export namespace Table {
     export const ID: string = "table";
 
     export function renderTable(axis: State.AxisValues): HTMLTableElement {
-        const dimensionX: string = axis.getValue(Constant.Axis.X);
-        const dimensionY: string = axis.getValue(Constant.Axis.Y);
+        const dimensionX: string = axis.x;
+        const dimensionY: string = axis.y;
         const select_x: HTMLSelectElement = AxisSelector.createAxisSelector(Constant.Axis.X, axis);
         const select_y: HTMLSelectElement = AxisSelector.createAxisSelector(Constant.Axis.Y, axis);
         //Create table

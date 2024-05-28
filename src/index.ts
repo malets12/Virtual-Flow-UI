@@ -11,6 +11,7 @@ import {doFullReload, removePrevious} from "./Utils.ts";
 import {Values} from "./Values.ts";
 import {Message} from "./worker/infrastructure/Message.ts";
 import {Pool, Saver} from "./worker/Pool.ts";
+import CalculationResult = Calculation.CalculationResult;
 
 (async (): Promise<void> => {
     //Functions for init
@@ -50,9 +51,10 @@ import {Pool, Saver} from "./worker/Pool.ts";
                 console.log(calcMessage.from, `Calculation done.`);
                 Calculation.CALC_RESULT.addResult(calcMessage.data);
                 Calculation.CALC_RESULT.tryMerge();
-                if (calcCounter === WORKER_COUNT && Calculation.CALC_RESULT.finalResult !== undefined) {
+                const result: CalculationResult | undefined = Calculation.CALC_RESULT.finalResult();
+                if (calcCounter === WORKER_COUNT && result !== undefined) {
                     console.log("Full calculation done!");
-                    Values.fillCells(Calculation.CALC_RESULT.finalResult);
+                    Values.fillCells(result);
                     calcCounter = 0;
                 }
                 break;

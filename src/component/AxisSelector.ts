@@ -4,18 +4,16 @@ import {State} from "../State.ts";
 import {Values} from "../Values.ts";
 
 export namespace AxisSelector {
-    import Axis = Constant.Axis;
-
-    export function createAxisSelector(axis:Axis, values:State.AxisValues):HTMLSelectElement {
-        const select:HTMLSelectElement = document.createElement("select");
+    export function createAxisSelector(axis: Constant.Axis, values: State.AxisValues): HTMLSelectElement {
+        const select: HTMLSelectElement = document.createElement("select");
         select.setAttribute("id", `select_${axis}`);
         select.setAttribute("name", `select_${axis}`);
         select.setAttribute("class", "axis_selector");
 
-        const options:DocumentFragment = document.createDocumentFragment();
-        for (const dimension:string of KEY.map.keys()) {
-            if (values.getComplementValue(axis) !== dimension) {
-                const option:HTMLOptionElement = document.createElement("option");
+        const options: DocumentFragment = document.createDocumentFragment();
+        for (const dimension: string of KEY.map.keys()) {
+            if (getComplementValue(values, axis) !== dimension) {
+                const option: HTMLOptionElement = document.createElement("option");
                 option.setAttribute("value", dimension);
                 option.innerHTML = dimension;
                 options.appendChild(option);
@@ -25,23 +23,32 @@ export namespace AxisSelector {
         return select;
     }
 
-    export function getAxisValue(axis:Axis):string {
-        const select:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById(`select_${axis}`);
+    function getComplementValue(values: State.AxisValues, axis: Constant.Axis): string {
+        switch (axis) {
+            case Constant.Axis.X:
+                return values.y;
+            case Constant.Axis.Y:
+                return values.x;
+        }
+    }
+
+    export function getAxisValue(axis: Constant.Axis): string {
+        const select: HTMLInputElement | null = <HTMLInputElement | null>document.getElementById(`select_${axis}`);
         return select !== null ? select.value : "";
     }
 
-    export function getAxisValues():State.AxisValues {
-        return new State.AxisValues(getAxisValue(Axis.X), getAxisValue(Axis.Y));
+    export function getAxisValues(): State.AxisValues {
+        return new State.AxisValues(getAxisValue(Constant.Axis.X), getAxisValue(Constant.Axis.Y));
     }
 
-    export function setAxisValues(values:State.AxisValues):void {
-        const selectX:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById("select_x");
+    export function setAxisValues(values: State.AxisValues): void {
+        const selectX: HTMLInputElement | null = <HTMLInputElement | null>document.getElementById("select_x");
         if (selectX !== null) {
-            selectX.value = values.getValue(Axis.X);
+            selectX.value = values.x;
         }
-        const selectY:HTMLInputElement|null = <HTMLInputElement|null>document.getElementById("select_y");
+        const selectY: HTMLInputElement | null = <HTMLInputElement | null>document.getElementById("select_y");
         if (selectY !== null) {
-            selectY.value = values.getValue(Axis.X);
+            selectY.value = values.y;
         }
     }
 

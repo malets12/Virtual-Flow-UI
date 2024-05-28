@@ -27,6 +27,6 @@ export default class NetworkLoadCounter extends AsyncCalculator implements Loade
             .then(arrayBuffer => {
                 this.JSONS.push(JSON.parse(new TextDecoder().decode(arrayBuffer)));
                 return new Message.LoadComplete(this.label, this.source, loadMessage.jsonUrl, arrayBuffer);
-            }).catch(error => console.error(error));
+            })
     }
 }

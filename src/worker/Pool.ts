@@ -76,10 +76,12 @@ export namespace Saver {
         private readonly jsonsAsByteArrays: Array<Message.LoadComplete> = [];
 
         async saveAll(): Promise<void> {
-            JSWorkerFactory.newDatabaseSaver(async (message: any): Promise<void> => {
-                console.log(`${message.from}: ${message.result}`);
+            return JSWorkerFactory.newDatabaseSaver(async (message: any): Promise<void> => {
+                console.log(message);
+                console.log(message.from, message.result);
                 LocalStorage.markHasLocalCopy();
             }).then(namedWorker => namedWorker.worker.postMessage(this.jsonsAsByteArrays))
+                .catch(error => console.error(error))
                 .finally(() => this.jsonsAsByteArrays.length = 0);
             //TODO? load collections
         }

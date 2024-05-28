@@ -103,8 +103,8 @@ export namespace Downloads {
     function findInbox(): ReadonlyArray<string> | undefined {
         return Array.from(document.getElementsByClassName("inbox"))
             .map(cell => cell.id)
-            .filter(id => Calculation.CALC_RESULT.finalResult?.cellToTranches.has(id))
-            .map(id => Calculation.CALC_RESULT.finalResult?.cellToTranches.get(id))
+            .filter(id => Calculation.CALC_RESULT.finalResult()?.cellToTranches.has(id))
+            .map(id => Calculation.CALC_RESULT.finalResult()?.cellToTranches.get(id))
             .reduce((arr1, arr2) => [...arr1, ...arr2]);
     }
 

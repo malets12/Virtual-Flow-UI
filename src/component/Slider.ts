@@ -53,8 +53,8 @@ export namespace Slider {
 
     export function addSliderEvents(axisValues: State.AxisValues): void {
         Array.from(document.getElementsByClassName("slider"))
-            .filter(slider => slider.firstElementChild.id !== axisValues.getValue(Constant.Axis.X)
-                && slider.firstElementChild.id !== axisValues.getValue(Constant.Axis.Y))
+            .filter(slider => slider.firstElementChild.id !== axisValues.x
+                && slider.firstElementChild.id !== axisValues.y)
             .forEach(slider => Array.from(slider.querySelectorAll("input"))
                 .forEach(input => {
                     input.addEventListener("mouseup", (evt: Event) => sliderEvent(input, evt, true));
@@ -62,7 +62,7 @@ export namespace Slider {
                         input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, false));
                     }
                 }));
-        for (const dimension: string of [axisValues.getValue(Constant.Axis.X), axisValues.getValue(Constant.Axis.Y)]) {
+        for (const dimension: string of [axisValues.x, axisValues.y]) {
             for (const slider: HTMLElement of [getAxisMinSlider(dimension), getAxisMaxSlider(dimension)]) {
                 for (const eventName: string of ["input", "change"]) {
                     slider.addEventListener(eventName, (evt: Event) => sliderEvent(slider, evt, true));
@@ -114,13 +114,13 @@ export namespace Slider {
 
     export function narrow(name: string, withForce: boolean = false): void {
         const axisValues: State.AxisValues = AxisSelector.getAxisValues();
-        const isAxis: boolean = name === axisValues.getValue(Constant.Axis.X) || name === axisValues.getValue(Constant.Axis.Y);
+        const isAxis: boolean = name === axisValues.x || name === axisValues.y;
         let compoundsSum: number = 0
         let tranchesSum: number = 0;
-        const lettersX: ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Constant.Axis.X));
-        const lettersY: ReadonlyArray<string> = getAxisLetters(axisValues.getValue(Constant.Axis.Y));
-        const rangeX: State.Range = getAxisSliderRange(axisValues.getValue(Constant.Axis.X));
-        const rangeY: State.Range = getAxisSliderRange(axisValues.getValue(Constant.Axis.Y));
+        const lettersX: ReadonlyArray<string> = getAxisLetters(axisValues.x);
+        const lettersY: ReadonlyArray<string> = getAxisLetters(axisValues.y);
+        const rangeX: State.Range = getAxisSliderRange(axisValues.x);
+        const rangeY: State.Range = getAxisSliderRange(axisValues.y);
         if (!rangeX.areEqual() && !rangeY.areEqual()) {
             const x_finals: Array<string> = [];
             const y_finals: Array<string> = [];
@@ -144,7 +144,7 @@ export namespace Slider {
                         cell.classList.add("inbox");
                     }
                     compoundsSum += parseInt(cell.getAttribute("num"));
-                    const linkedTranches: ReadonlyArray<string> | undefined = Calculation.CALC_RESULT.finalResult?.cellToTranches.get(cellId);
+                    const linkedTranches: ReadonlyArray<string> | undefined = Calculation.CALC_RESULT.finalResult()?.cellToTranches.get(cellId);
                     if (linkedTranches !== undefined) {
                         tranchesSum += linkedTranches.length;
                     }

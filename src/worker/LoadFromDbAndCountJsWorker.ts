@@ -1,5 +1,5 @@
 import {Constant} from "../Constant.ts";
-import type DatabaseLoadCounter from "./infrastructure/DatabaseLoadCounter.ts";
+import DatabaseLoadCounter from "./infrastructure/DatabaseLoadCounter.ts";
 import {Message} from "./infrastructure/Message.ts";
 
 const worker: DatabaseLoadCounter = new DatabaseLoadCounter(self.name);

@@ -23,8 +23,8 @@ export abstract class AsyncCalculator {
         const cellToTranches: Map<string, Array<string>> = new Map();
         let totalTranches: number = 0;
         let totalCompounds: number = 0;
-        const pos_x: number | undefined = ORDER.map.get(requestMessage.axis.getValue(Constant.Axis.X));
-        const pos_y: number | undefined = ORDER.map.get(requestMessage.axis.getValue(Constant.Axis.Y));
+        const pos_x: number | undefined = ORDER.map.get(requestMessage.axis.x);
+        const pos_y: number | undefined = ORDER.map.get(requestMessage.axis.y);
         for (const json: Tranche of this.JSONS) {
             for (const entry: readonly [string, number] of Object.entries(json)) {
                 const key: string = entry[0];

@@ -6,11 +6,11 @@ export namespace JSWorkerFactory {
     }
 
     abstract class AbstractWorker implements NamedWorker {
-        private readonly _name: string;
-        private readonly _worker: Worker;
+        readonly _name: string;
+        readonly _worker: Worker;
 
         protected constructor(fileName: string, callback: (msg: any) => Promise<void>, order: number) {
-            this._name = "Worker-" + order;
+            this._name = `Worker-${order}`;
             this._worker = new Worker(fileName, { name: this._name, type: "module" });
             this._worker.addEventListener("message", (msg: any) => callback(msg), false);
         }
