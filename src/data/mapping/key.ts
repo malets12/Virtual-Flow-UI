@@ -126,10 +126,10 @@ class Key {
         for (const [dimension, range]: [string, { [l: string]: string }] of Object.entries(key)) {
             const dimensionValues: Map<string, string> = new Map();
             for (const [letter, value]: [string, string] of Object.entries(range)) {
-                if (value === "0") {
-                    dimensionsWithZero.add(dimension);
-                }
                 dimensionValues.set(letter, value);
+            }
+            if (!dimensionValues.has("0")) {
+                dimensionsWithZero.add(dimension);
             }
             result.set(dimension, dimensionValues);
         }

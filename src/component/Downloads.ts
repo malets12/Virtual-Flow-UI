@@ -5,7 +5,6 @@ import {KEY} from "../data/mapping/key.ts";
 import {ORDER} from "../data/mapping/order.ts";
 
 export namespace Downloads {
-
     export const ID: string = "download";
     export const COLLECTIONS_ID: string = "downloadC";
 
@@ -103,8 +102,8 @@ export namespace Downloads {
     function findInbox(): ReadonlyArray<string> | undefined {
         return Array.from(document.getElementsByClassName("inbox"))
             .map(cell => cell.id)
-            .filter(id => Calculation.CALC_RESULT.finalResult()?.cellToTranches.has(id))
-            .map(id => Calculation.CALC_RESULT.finalResult()?.cellToTranches.get(id))
+            .filter(id => Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT)?.cellToTranches.has(id))
+            .map(id => Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT)?.cellToTranches.get(id))
             .reduce((arr1, arr2) => [...arr1, ...arr2]);
     }
 

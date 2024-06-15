@@ -14,7 +14,7 @@ const build = await Bun.build({
         './src/worker/LoadFromDbAndCountJsWorker.ts'
     ],
     outdir: outdir,
-    splitting: true,
+    splitting: false,
     minify: false
 });
 for (const log of build.logs) {

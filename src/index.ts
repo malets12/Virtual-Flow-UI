@@ -1,4 +1,3 @@
-import {AxisSelector} from "./component/AxisSelector.ts";
 import {Downloads} from "./component/Downloads.ts";
 import {Loader} from "./component/Loader.ts";
 import {LocalStorage} from "./component/LocalStorage.ts";
@@ -11,7 +10,6 @@ import {doFullReload, removePrevious} from "./Utils.ts";
 import {Values} from "./Values.ts";
 import {Message} from "./worker/infrastructure/Message.ts";
 import {Pool, Saver} from "./worker/Pool.ts";
-import CalculationResult = Calculation.CalculationResult;
 
 (async (): Promise<void> => {
     //Functions for init
@@ -49,9 +47,8 @@ import CalculationResult = Calculation.CalculationResult;
                 const calcMessage: Message.CalculationDone = message as Message.CalculationDone;
                 calcCounter++;
                 console.log(calcMessage.from, `Calculation done.`);
-                Calculation.CALC_RESULT.addResult(calcMessage.data);
-                Calculation.CALC_RESULT.tryMerge();
-                const result: CalculationResult | undefined = Calculation.CALC_RESULT.finalResult();
+                Calculation.ResultProcessor.addResult(Calculation.CALC_RESULT, calcMessage.data);
+                const result: Calculation.CalculationResult | undefined = Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT);
                 if (calcCounter === WORKER_COUNT && result !== undefined) {
                     console.log("Full calculation done!");
                     Values.fillCells(result);
@@ -84,14 +81,12 @@ function render(axis: State.AxisValues): void {
     table.after(info);
     info.after(Wrapper.createControlsWrapper());
     //Call functions
-    AxisSelector.setAxisValues(axis)
-    Slider.renderControls();
-    Slider.addSliderEvents(axis);
+    Slider.renderControls(axis);
     Downloads.renderDownloads();
     //TODO? render_collections_downloads();
-    Values.render(axis, true);
-    AxisSelector.addChangeListener();
-    Slider.narrow("", true);
+    Values.render(axis, true)
+        .then(() => Slider.narrow("", true))
+        .catch(error => console.error(error));
     if (!LocalStorage.hasLocalCopy()) {
         document.dispatchEvent(new Event(Constant.EventName.SAVE_TO_DATABASE));
     }

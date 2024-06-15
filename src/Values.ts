@@ -10,9 +10,8 @@ import {Message} from "./worker/infrastructure/Message.ts";
 import {Pool} from "./worker/Pool.ts";
 
 export namespace Values {
-    export function render(axis: State.AxisValues, isInit: boolean = false):void {
-        //Check if other dimensions are in use
-        if (!isInit && !State.SLIDERS_STATE.isNeedRecalculation(axis)) {
+    export async function render(axis: State.AxisValues, isInit: boolean = false): Promise<void> {
+        if (!isInit && !State.SLIDERS_STATE.isNeedRecalculation(axis)) { //Check if other dimensions are in use
             return;
         }
         Loader.showLoader();
@@ -42,7 +41,8 @@ export namespace Values {
                 element.setAttribute("num", "0");
             }
         }
-        Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, notSelectedDimensions));
+        Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, notSelectedDimensions))
+            .catch(error => console.error(error));
     }
 
     export function fillCells(result: Calculation.CalculationResult): void {
@@ -58,8 +58,8 @@ export namespace Values {
     function fillCellsWithRowAndColumnSums(results: Calculation.CalculationResult): void {
         const summaryMap: Map<string, number> = new Map();
         for (const [id, num]: [string, number] of results.cellCounts) {
-            const columnId: string = `${id.substring(0, 1)}0`;
-            const rowId: string = `0${id.substring(1, 2)}`;
+            const columnId: string = `${id.substring(0, 1)}$`;
+            const rowId: string = `$${id.substring(1, 2)}`;
             for (const element: string of [columnId, rowId]) {
                 const sum: number | undefined = summaryMap.get(element);
                 if (sum === undefined) {

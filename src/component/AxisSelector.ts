@@ -12,49 +12,33 @@ export namespace AxisSelector {
 
         const options: DocumentFragment = document.createDocumentFragment();
         for (const dimension: string of KEY.map.keys()) {
-            if (getComplementValue(values, axis) !== dimension) {
+            if (State.AxisValues.getComplementValue(values, axis) !== dimension) {
                 const option: HTMLOptionElement = document.createElement("option");
                 option.setAttribute("value", dimension);
-                option.innerHTML = dimension;
+                option.innerText = dimension;
                 options.appendChild(option);
             }
         }
         select.appendChild(options);
+        select.value = State.AxisValues.getValue(values, axis);
+        select.addEventListener("change", () => Values.render(AxisSelector.getAxisValues()));
         return select;
     }
 
-    function getComplementValue(values: State.AxisValues, axis: Constant.Axis): string {
-        switch (axis) {
-            case Constant.Axis.X:
-                return values.y;
-            case Constant.Axis.Y:
-                return values.x;
-        }
-    }
-
     export function getAxisValue(axis: Constant.Axis): string {
-        const select: HTMLInputElement | null = <HTMLInputElement | null>document.getElementById(`select_${axis}`);
-        return select !== null ? select.value : "";
+        return getSelector(axis).value;
     }
 
     export function getAxisValues(): State.AxisValues {
         return new State.AxisValues(getAxisValue(Constant.Axis.X), getAxisValue(Constant.Axis.Y));
     }
 
-    export function setAxisValues(values: State.AxisValues): void {
-        const selectX: HTMLInputElement | null = <HTMLInputElement | null>document.getElementById("select_x");
-        if (selectX !== null) {
-            selectX.value = values.x;
-        }
-        const selectY: HTMLInputElement | null = <HTMLInputElement | null>document.getElementById("select_y");
-        if (selectY !== null) {
-            selectY.value = values.y;
-        }
-    }
-
-    export function addChangeListener(): void {
-        for (const axisSelector: HTMLElement of document.getElementsByClassName("axis_selector")) {
-            axisSelector.addEventListener("change", () => Values.render(AxisSelector.getAxisValues()));
+    function getSelector(axis: Constant.Axis): HTMLSelectElement {
+        const selector: HTMLElement | null = document.getElementById(`select_${axis}`);
+        if (selector instanceof HTMLSelectElement) {
+            return selector;
+        } else {
+            throw `No selector for axis '${axis}' found`;
         }
     }
 }

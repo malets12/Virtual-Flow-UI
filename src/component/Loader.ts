@@ -2,7 +2,7 @@ export namespace Loader {
     const LOADER: string = "loader";
 
     export function showLoader(): void {
-        document.getElementById(LOADER).style.display = "block"; //TODO check
+        document.getElementById(LOADER).style.display = "block";
     }
 
     export function hideLoader(): void {

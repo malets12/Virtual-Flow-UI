@@ -34,9 +34,9 @@ export abstract class AsyncCalculator {
                 if (!requestMessage.isInit) {
                     add = requestMessage.notSelectedDimensions.every(dimension => {
                         const pos_param: number | undefined = ORDER.map.get(dimension);
-                        const limits: State.Range | undefined = requestMessage.possibleValues.get(dimension);
+                        const range: State.Range | undefined = requestMessage.possibleValues.get(dimension);
                         const int: number = this.toInt(key.substring(pos_param - 1, pos_param));
-                        return limits?.matches(int);
+                        return State.Range.matches(range, int);
                     });
                 } else {
                     totalCompounds = totalCompounds + val;

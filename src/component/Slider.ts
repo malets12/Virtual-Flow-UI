@@ -7,10 +7,9 @@ import {AxisSelector} from "./AxisSelector.ts";
 import {Wrapper} from "./Wrapper.ts";
 
 export namespace Slider {
-
-    export function renderControls(): void {
-        const column0: HTMLElement = document.getElementById("controls_0");
-        const column1: HTMLElement = document.getElementById("controls_1");
+    export function renderControls(axisValues: State.AxisValues): void {
+        const column0: HTMLElement | null = document.getElementById("controls_0");
+        const column1: HTMLElement | null = document.getElementById("controls_1");
         for (const dimension: string of KEY.map.keys()) {
             const datalist: HTMLDivElement = document.createElement("div");
             const listHolder: DocumentFragment = document.createDocumentFragment();
@@ -40,42 +39,37 @@ export namespace Slider {
             const container: HTMLDivElement = document.createElement("div");
             container.setAttribute("class", "slider");
             container.appendChild(label);
-            container.appendChild(createRangeInput(`${dimension}_min`, 1, length));
-            container.appendChild(createRangeInput(`${dimension}_max`, length, length));
-            if (Constant.FIRST_COLUMN_SLIDERS.includes(dimension)) {
-                column0.appendChild(container);
+            const inputMin: HTMLInputElement = createRangeInput(`${dimension}_min`, 1, length);
+            const inputMax: HTMLInputElement = createRangeInput(`${dimension}_max`, length, length);
+            if (dimension === axisValues.x || dimension === axisValues.y) {
+                for (const eventName: string of ["input", "change"]) {
+                    inputMin.addEventListener(eventName, (evt: Event) => sliderEvent(inputMin, evt, true));
+                    inputMax.addEventListener(eventName, (evt: Event) => sliderEvent(inputMax, evt, true));
+                }
             } else {
-                column1.appendChild(container);
+                inputMin.addEventListener("mouseup", (evt: Event) => sliderEvent(inputMin, evt, true));
+                inputMax.addEventListener("mouseup", (evt: Event) => sliderEvent(inputMax, evt, true));
+                for (const ev: string of ["input", "change"]) {
+                    inputMin.addEventListener(ev, (evt: Event) => sliderEvent(inputMin, evt, false));
+                    inputMax.addEventListener(ev, (evt: Event) => sliderEvent(inputMax, evt, false));
+                }
+            }
+            container.appendChild(inputMin);
+            container.appendChild(inputMax);
+            if (Constant.FIRST_COLUMN_SLIDERS.includes(dimension)) {
+                column0?.appendChild(container);
+            } else {
+                column1?.appendChild(container);
             }
             document.getElementById(dimension).parentNode.appendChild(datalist);
         }
     }
 
-    export function addSliderEvents(axisValues: State.AxisValues): void {
-        Array.from(document.getElementsByClassName("slider"))
-            .filter(slider => slider.firstElementChild.id !== axisValues.x
-                && slider.firstElementChild.id !== axisValues.y)
-            .forEach(slider => Array.from(slider.querySelectorAll("input"))
-                .forEach(input => {
-                    input.addEventListener("mouseup", (evt: Event) => sliderEvent(input, evt, true));
-                    for (const ev: string of ["input", "change"]) {
-                        input.addEventListener(ev, (evt: Event) => sliderEvent(input, evt, false));
-                    }
-                }));
-        for (const dimension: string of [axisValues.x, axisValues.y]) {
-            for (const slider: HTMLElement of [getAxisMinSlider(dimension), getAxisMaxSlider(dimension)]) {
-                for (const eventName: string of ["input", "change"]) {
-                    slider.addEventListener(eventName, (evt: Event) => sliderEvent(slider, evt, true));
-                }
-            }
-        }
-    }
-
     function sliderEvent(input: HTMLElement, evt: Event, withNarrow: boolean): void {
-        const labelNode: HTMLElement = input.parentNode.querySelector(".slider_name");
+        const labelNode: HTMLElement = input?.parentNode.querySelector(".slider_name");
         const dimension: string = labelNode.id;
         let range: State.Range = getRange(dimension);
-        if (range.areEqual()) {
+        if (State.Range.isWithZeroLength(range)) {
             //Limit sliders
             const maxSlider: HTMLInputElement = getAxisMaxSlider(dimension);
             const minSlider: HTMLInputElement = getAxisMinSlider(dimension);
@@ -88,8 +82,8 @@ export namespace Slider {
             }
             range = getRange(dimension);
         }
-        if (range.isNotValid()) {
-            range = range.getValidated();
+        if (State.Range.isNotValid(range)) {
+            range = State.Range.getValidated(range);
             getAxisMinSlider(dimension).value = String(range.min);
             getAxisMaxSlider(dimension).value = String(range.max);
         }
@@ -121,14 +115,14 @@ export namespace Slider {
         const lettersY: ReadonlyArray<string> = getAxisLetters(axisValues.y);
         const rangeX: State.Range = getAxisSliderRange(axisValues.x);
         const rangeY: State.Range = getAxisSliderRange(axisValues.y);
-        if (!rangeX.areEqual() && !rangeY.areEqual()) {
-            const x_finals: Array<string> = [];
-            const y_finals: Array<string> = [];
+        if (!State.Range.isWithZeroLength(rangeX) && !State.Range.isWithZeroLength(rangeY)) {
+            const finalsX: Array<string> = [];
+            const finalsY: Array<string> = [];
             for (let i: number = rangeX.min; i < rangeX.max; i++) {
-                x_finals.push(lettersX[i]);
+                finalsX.push(lettersX[i]);
             }
             for (let i: number = rangeY.min; i < rangeY.max; i++) {
-                y_finals.push(lettersY[i]);
+                finalsY.push(lettersY[i]);
             }
             if (isAxis) {
                 for (const cell: HTMLElement of document.getElementsByClassName("inbox")) {
@@ -136,15 +130,16 @@ export namespace Slider {
                 }
             }
             //Calculate inbox
-            for (const y_final: string of y_finals) {
-                for (const x_final: string of x_finals) {
+            for (const y_final: string of finalsY) {
+                for (const x_final: string of finalsX) {
                     const cellId: string = `${x_final}${y_final}`;
-                    const cell: HTMLElement = document.getElementById(cellId);
+                    const cell: HTMLElement | null = document.getElementById(cellId);
                     if (isAxis || withForce) {
-                        cell.classList.add("inbox");
+                        cell?.classList.add("inbox");
                     }
-                    compoundsSum += parseInt(cell.getAttribute("num"));
-                    const linkedTranches: ReadonlyArray<string> | undefined = Calculation.CALC_RESULT.finalResult()?.cellToTranches.get(cellId);
+                    compoundsSum += parseInt(cell?.getAttribute("num"));
+                    const linkedTranches: ReadonlyArray<string> | undefined =
+                        Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT)?.cellToTranches.get(cellId);
                     if (linkedTranches !== undefined) {
                         tranchesSum += linkedTranches.length;
                     }
@@ -159,33 +154,34 @@ export namespace Slider {
                     }
                 }
                 for (let i: number = 0; i < lettersY.length; i++) {
-                    highlightRange(`${x_finals[x_finals.length - 1]}${lettersY[i]}`, "Right"); //Right vertical
-                    highlightRange(`${x_finals[0]}${lettersY[i]}`, "Left"); //Left vertical
+                    highlightRange(`${finalsX[finalsX.length - 1]}${lettersY[i]}`, "Right"); //Right vertical
+                    highlightRange(`${finalsX[0]}${lettersY[i]}`, "Left"); //Left vertical
                 }
                 for (let i: number = 0; i < lettersX.length; i++) {
-                    highlightRange(`${lettersX[i]}${y_finals[0]}`, "Top"); //Top horizontal
-                    highlightRange(`${lettersX[i]}${y_finals[y_finals.length - 1]}`, "Bottom"); //Bottom horizontal
+                    highlightRange(`${lettersX[i]}${finalsY[0]}`, "Top"); //Top horizontal
+                    highlightRange(`${lettersX[i]}${finalsY[finalsY.length - 1]}`, "Bottom"); //Bottom horizontal
                 }
-                for (let frame: number = 0; frame < 2; frame++) {
-                    const cells: ReadonlyArray<HTMLElement> = [
-                        document.getElementById(`${x_finals[x_finals.length - 1]}${frame}`),
-                        document.getElementById(`${x_finals[0]}${frame}`),
-                        document.getElementById(`${frame}${y_finals[0]}`),
-                        document.getElementById(`${frame}${y_finals[y_finals.length - 1]}`)
+                for (const frame: string of ["#", "$"]) { //Borders
+                    const cells: ReadonlyArray<HTMLElement | null> = [
+                        document.getElementById(`${finalsX[finalsX.length - 1]}${frame}`),
+                        document.getElementById(`${finalsX[0]}${frame}`),
+                        document.getElementById(`${frame}${finalsY[0]}`),
+                        document.getElementById(`${frame}${finalsY[finalsY.length - 1]}`)
                     ];
                     for (const cell: HTMLElement of cells) {
-                        cell.classList.remove("unselected");
-                        cell.classList.add("selected");
+                        cell?.classList.remove("unselected");
+                        cell?.classList.add("selected");
                     }
-                    cells[0].classList.add("selectedRight");
-                    cells[1].classList.add("selectedLeft");
-                    cells[2].classList.add("selectedTop");
-                    cells[3].classList.add("selectedBottom");
+                    cells[0]?.classList.add("selectedRight");
+                    cells[1]?.classList.add("selectedLeft");
+                    cells[2]?.classList.add("selectedTop");
+                    cells[3]?.classList.add("selectedBottom");
                 }
             }
         }
         if (!isAxis) {
-            Values.render(axisValues);
+            Values.render(axisValues)
+                .catch(error => console.error(error));
         }
         //Add sums
         State.TOTALS.setMin(Constant.Counter.COMPOUNDS, compoundsSum)
@@ -217,16 +213,16 @@ export namespace Slider {
     }
 
     function highlightRange(id: string, position: string): void {
-        const cell: HTMLElement = document.getElementById(id);
-        cell.classList.remove("unselected");
-        cell.classList.add("selected", `selected${position}`);
+        const cell: HTMLElement | null = document.getElementById(id);
+        cell?.classList.remove("unselected");
+        cell?.classList.add("selected", `selected${position}`);
     }
 
     function getAxisSliderRange(dimension: string): State.Range {
-        return new State.Range(
+        return State.Range.getValidated(new State.Range(
             getRangeMin(dimension) - 1,
             KEY.dimensionsWithZero.has(dimension) ? getRangeMax(dimension) : getRangeMin(dimension) - 1
-        ).getValidated();
+        ));
     }
 
     export function getRange(dimension: string): State.Range {

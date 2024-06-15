@@ -5,6 +5,8 @@ import {JSWorkerFactory} from "./WorkerFactory.ts";
 
 export namespace Pool {
 
+    import NamedWorker = JSWorkerFactory.NamedWorker;
+
     class WorkQueue {
         private readonly queue: Array<Message.LoadRequest> = [];
 
@@ -29,21 +31,31 @@ export namespace Pool {
         async init(callback: (msg: any) => Promise<void>): Promise<void> {
             const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
             const loadFromDB: boolean = LocalStorage.hasLocalCopy();
-            const maxPartsPerWorker: number = Constant.PARTS / WORKER_COUNT + 1;
+            const maxPartsPerWorker: number = Constant.PARTS / WORKER_COUNT;
+            let workCounter: number = 0;
             for (let i: number = 0; i < WORKER_COUNT; i++) {
                 (loadFromDB ? JSWorkerFactory.newDatabaseLoader(callback, i) : JSWorkerFactory.newNetworkLoader(callback, i))
                     .then(namedWorker => {
                         this.workers.set(namedWorker.name, namedWorker.worker);
                         for (let part: number = 0; part < maxPartsPerWorker; part++) {
-                            WORK_QUEUE.pop()
-                                .then(msg => {
-                                    if (msg !== undefined) {
-                                        namedWorker.worker.postMessage(msg);
-                                    }
-                                });
+                            WorkerPool.postMessage(namedWorker);
+                            workCounter++;
+                        }
+                        while (i === WORKER_COUNT - 1 && workCounter !== Constant.PARTS) {
+                            WorkerPool.postMessage(namedWorker);
+                            workCounter++;
                         }
                     });
             }
+        }
+
+        private static postMessage(namedWorker: NamedWorker): void {
+            WORK_QUEUE.pop()
+                .then(msg => {
+                    if (msg !== undefined) {
+                        namedWorker.worker.postMessage(msg);
+                    }
+                });
         }
 
         async takeNext(workerName: string): Promise<void> {
@@ -77,8 +89,7 @@ export namespace Saver {
 
         async saveAll(): Promise<void> {
             return JSWorkerFactory.newDatabaseSaver(async (message: any): Promise<void> => {
-                console.log(message);
-                console.log(message.from, message.result);
+                console.log(message.data.from, message.data.result);
                 LocalStorage.markHasLocalCopy();
             }).then(namedWorker => namedWorker.worker.postMessage(this.jsonsAsByteArrays))
                 .catch(error => console.error(error))

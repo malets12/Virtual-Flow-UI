@@ -14,6 +14,24 @@ export namespace State {
             this.x = x;
             this.y = y;
         }
+
+        static getValue(values: State.AxisValues, axis: Constant.Axis): string { //TODO refactor other
+            switch (axis) {
+                case Constant.Axis.X:
+                    return values.x;
+                case Constant.Axis.Y:
+                    return values.y;
+            }
+        }
+
+        static getComplementValue(values: State.AxisValues, axis: Constant.Axis): string {
+            switch (axis) {
+                case Constant.Axis.X:
+                    return values.y;
+                case Constant.Axis.Y:
+                    return values.x;
+            }
+        }
     }
 
     export class Range {
@@ -25,24 +43,20 @@ export namespace State {
             this.max = max;
         }
 
-        isNotValid(): boolean {
-            return this.min > this.max;
+        static matches(range: Range | undefined, int: number): boolean {
+            return int >= range?.min && int < range?.max;
         }
 
-        getValidated(): Range {
-            if (this.isNotValid()) {
-                return new Range(this.max, this.min);
-            } else {
-                return this;
-            }
+        static isNotValid(range: Range): boolean {
+            return range.min > range.max;
         }
 
-        matches(int: number): boolean {
-            return int >= this.min && int < this.max;
+        static getValidated(range: Range): Range {
+            return this.isNotValid(range) ? new Range(range.max, range.min) : range;
         }
 
-        areEqual(): boolean {
-            return this.min === this.max;
+        static isWithZeroLength(range: Range): boolean {
+            return range.min === range.max;
         }
     }
 
@@ -103,7 +117,7 @@ export namespace State {
             const snapshot: Map<string, Range> = new Map();
             Array.from(KEY.map.keys())
                 .filter(key => full || (key !== axisValues.x && key !== axisValues.y))
-                .forEach(dimension => snapshot.set(dimension, Slider.getRange(dimension).getValidated()));
+                .forEach(dimension => snapshot.set(dimension, Range.getValidated(Slider.getRange(dimension))));
             return snapshot;
         }
     }
@@ -112,32 +126,51 @@ export namespace State {
     export const SLIDERS_STATE: Snapshot = new Snapshot();
 }
 
-export namespace Calculation {
-    export class CalculationResultHolder {
-        private readonly calcResults: Array<CalculationResult> = [];
-        private _finalResult?: CalculationResult;
+export namespace Calculation { //TODO move to separate file, to interfaces
+    export class ResultProcessor {
+        calcResults: Array<CalculationResult> = [];
+        finalResult?: CalculationResult; //TODO private
 
-        tryMerge(): void {
-            const head: CalculationResult | undefined = this.calcResults.pop();
-            const other: CalculationResult | undefined = this.calcResults.pop();
-            if (head !== undefined && other !== undefined) {
-                this.calcResults.push(head.merge(other));
-            }
+        static addResult(holder: ResultProcessor, result: Calculation.CalculationResult): void {
+            holder.calcResults.push(result);
         }
 
-        addResult(result: Calculation.CalculationResult): void {
-            this.calcResults.push(result);
+        static finalResult(holder: ResultProcessor): Calculation.CalculationResult | undefined {
+            if (holder.calcResults.length > 0) {
+                const head: CalculationResult | undefined = holder.calcResults.pop();
+                if (head !== undefined && holder.finalResult !== undefined) {
+                    holder.finalResult = ResultProcessor.merge(holder.finalResult, head);
+                } else {
+                    holder.finalResult = head;
+                }
+            }
+            return holder.finalResult;
         }
 
-        finalResult(): Calculation.CalculationResult | undefined {
-            if (this.calcResults.length === 1) {
-                this._finalResult = this.calcResults.pop();
+        private static merge(first: CalculationResult, second: CalculationResult): CalculationResult {
+            for (const [key, val]: [string, number] of second.cellCounts) {
+                const cellCountsValue: number | undefined = first.cellCounts.get(key);
+                if (cellCountsValue === undefined) {
+                    first.cellCounts.set(key, val);
+                } else {
+                    first.cellCounts.set(key, cellCountsValue + val);
+                }
             }
-            return this._finalResult;
+            for (const [key, val]: [string, Array<string>] of second.cellToTranches) {
+                const tranchesArray: Array<string> | undefined = first.cellToTranches.get(key);
+                if (tranchesArray === undefined) {
+                    first.cellToTranches.set(key, val);
+                } else {
+                    first.cellToTranches.set(key, tranchesArray.concat(val));
+                }
+            }
+            first.totalTranches += second.totalTranches;
+            first.totalCompounds += second.totalCompounds;
+            return first;
         }
     }
 
-    export const CALC_RESULT: CalculationResultHolder = new CalculationResultHolder();
+    export const CALC_RESULT: ResultProcessor = new ResultProcessor();
 
     export class CalculationResult {
         readonly cellCounts: Map<string, number>;
@@ -153,28 +186,6 @@ export namespace Calculation {
             this.cellToTranches = cellToTranches;
             this.totalTranches = totalTranches;
             this.totalCompounds = totalCompounds;
-        }
-
-        merge(other: CalculationResult): CalculationResult {
-            for (const [key, val]: [string, number] of other.cellCounts) {
-                const cellCountsValue: number | undefined = this.cellCounts.get(key);
-                if (cellCountsValue === undefined) {
-                    this.cellCounts.set(key, val);
-                } else {
-                    this.cellCounts.set(key, cellCountsValue + val);
-                }
-            }
-            for (const [key, val]: [string, Array<string>] of other.cellToTranches) {
-                const tranchesArray: Array<string> | undefined = this.cellToTranches.get(key);
-                if (tranchesArray === undefined) {
-                    this.cellToTranches.set(key, val);
-                } else {
-                    this.cellToTranches.set(key, [...tranchesArray, ...val]);
-                }
-            }
-            this.totalTranches += other.totalTranches;
-            this.totalCompounds += other.totalCompounds;
-            return this;
         }
     }
 }
