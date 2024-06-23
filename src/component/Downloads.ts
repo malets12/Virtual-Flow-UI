@@ -1,8 +1,10 @@
+import {Calculation} from "../compute/Calculation.ts";
 import {Download, DownloadTemplateMapping, DownloadURL} from "../data/mapping/download/download.ts";
-import {Calculation, State} from "../State.ts";
-import {replaceAll} from "../Utils.ts";
+import {State} from "../compute/State.ts";
+import {replaceAll} from "../compute/Utils.ts";
 import {KEY} from "../data/mapping/key.ts";
 import {ORDER} from "../data/mapping/order.ts";
+import {Model} from "../model/Model.ts";
 
 export namespace Downloads {
     export const ID: string = "download";
@@ -76,10 +78,10 @@ export namespace Downloads {
     }
 
     function makeRegexp(): [string, string] {
-        State.Snapshot.saveNew(new State.AxisValues(), true);
+        State.Snapshot.saveNew(new Model.AxisValues(), true);
         const result: Array<Array<string>> = [];
         ORDER.map.forEach(() => result.push([]));
-        for (const [dimension, range]: [string, State.Range] of State.Snapshot.current()) {
+        for (const [dimension, range]: [string, Model.Range] of State.Snapshot.current()) {
             const map: ReadonlyMap<string, string> | undefined = KEY.map.get(dimension);
             if (map === undefined) {
                 continue;
@@ -102,8 +104,8 @@ export namespace Downloads {
     function findInbox(): ReadonlyArray<string> | undefined {
         return Array.from(document.getElementsByClassName("inbox"))
             .map(cell => cell.id)
-            .filter(id => Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT)?.cellToTranches.has(id))
-            .map(id => Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT)?.cellToTranches.get(id))
+            .filter(id => Calculation.CALC_RESULT.getFinalResult()?.cellToTranches.has(id))
+            .map(id => Calculation.CALC_RESULT.getFinalResult()?.cellToTranches.get(id))
             .reduce((arr1, arr2) => [...arr1, ...arr2]);
     }
 

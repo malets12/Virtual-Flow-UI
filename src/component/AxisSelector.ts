@@ -1,10 +1,10 @@
-import {Constant} from "../Constant.ts";
+import {Constant} from "../data/Constant.ts";
 import {KEY} from "../data/mapping/key.ts";
-import {Drawer} from "../Drawer.ts";
-import {State} from "../State.ts";
+import {ComponentDrawer} from "../drawer/ComponentDrawer.ts";
+import {Model} from "../model/Model.ts";
 
 export namespace AxisSelector {
-    export function createAxisSelector(axis: Constant.Axis, values: State.AxisValues): HTMLSelectElement {
+    export function createAxisSelector(axis: Constant.Axis, axisValues: Model.AxisValues): HTMLSelectElement {
         const select: HTMLSelectElement = document.createElement("select");
         select.setAttribute("id", `select_${axis}`);
         select.setAttribute("name", `select_${axis}`);
@@ -12,7 +12,7 @@ export namespace AxisSelector {
 
         const options: DocumentFragment = document.createDocumentFragment();
         for (const dimension: string of KEY.map.keys()) {
-            if (State.AxisValues.getComplementValue(values, axis) === dimension) {
+            if (Model.AxisValues.getComplementValue(axisValues, axis) === dimension) {
                 continue;
             }
             const option: HTMLOptionElement = document.createElement("option");
@@ -21,8 +21,8 @@ export namespace AxisSelector {
             options.appendChild(option);
         }
         select.appendChild(options);
-        select.value = State.AxisValues.getValue(values, axis);
-        select.addEventListener("change", () => Drawer.render(AxisSelector.getAxisValues()));
+        select.value = Model.AxisValues.getValue(axisValues, axis);
+        select.addEventListener("change", () => ComponentDrawer.draw(AxisSelector.getAxisValues()));
         return select;
     }
 
@@ -30,8 +30,8 @@ export namespace AxisSelector {
         return getSelector(axis).value;
     }
 
-    export function getAxisValues(): State.AxisValues {
-        return new State.AxisValues(getAxisValue(Constant.Axis.X), getAxisValue(Constant.Axis.Y));
+    export function getAxisValues(): Model.AxisValues {
+        return new Model.AxisValues(getAxisValue(Constant.Axis.X), getAxisValue(Constant.Axis.Y));
     }
 
     function getSelector(axis: Constant.Axis): HTMLSelectElement {

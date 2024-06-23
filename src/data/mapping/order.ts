@@ -1,4 +1,4 @@
-import {objToStrMap} from "../../Utils.ts";
+import {objToStrMap} from "../../compute/Utils.ts";
 
 class Order {
     readonly map: ReadonlyMap<string, number>;

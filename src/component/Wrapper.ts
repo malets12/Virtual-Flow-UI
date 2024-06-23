@@ -1,6 +1,7 @@
-import {State} from "../State.ts";
-import {abbrN} from "../Utils.ts";
-import {Constant} from "../Constant.ts";
+import {State} from "../compute/State.ts";
+import {abbrN} from "../compute/Utils.ts";
+import {Constant} from "../data/Constant.ts";
+import {Model} from "../model/Model.ts";
 
 export namespace Wrapper {
 
@@ -32,7 +33,7 @@ export namespace Wrapper {
         const max: HTMLSpanElement = document.createElement("span");
         pre.innerText = `${counter.charAt(0).toUpperCase()}${counter.slice(1)} selected: `;
         after.innerText = " from ";
-        const state: State.Range = State.Totals.get(counter);
+        const state: Model.Range = State.Totals.get(counter);
         min.innerText = abbrN(state.min);
         max.innerText = abbrN(state.max);
         nodeHolder.append(pre, min, after, max);

@@ -1,13 +1,15 @@
+import {Calculation} from "../compute/Calculation.ts";
 import {KEY} from "../data/mapping/key.ts";
 import {DESCRIPTION} from "../data/mapping/description.ts";
-import {Constant} from "../Constant.ts";
-import {Calculation, State} from "../State.ts";
-import {Values} from "../Values.ts";
+import {Constant} from "../data/Constant.ts";
+import {Model} from "../model/Model.ts";
+import {State} from "../compute/State.ts";
+import {ValuesDrawer} from "../drawer/ValuesDrawer.ts";
 import {AxisSelector} from "./AxisSelector.ts";
 import {Wrapper} from "./Wrapper.ts";
 
 export namespace Slider {
-    export function renderControls(axisValues: State.AxisValues): void {
+    export function renderControls(axisValues: Model.AxisValues): void {
         const column0: HTMLElement | null = document.getElementById("controls_0");
         const column1: HTMLElement | null = document.getElementById("controls_1");
         for (const dimension: string of KEY.map.keys()) {
@@ -41,7 +43,8 @@ export namespace Slider {
             container.appendChild(label);
             const inputMin: HTMLInputElement = createRangeInput(`${dimension}_min`, 1, length);
             const inputMax: HTMLInputElement = createRangeInput(`${dimension}_max`, length, length);
-            if (dimension === axisValues.x || dimension === axisValues.y) {
+            if (dimension === Model.AxisValues.getValue(axisValues, Constant.Axis.X) ||
+                dimension === Model.AxisValues.getValue(axisValues, Constant.Axis.Y)) {
                 for (const eventName: string of ["input", "change"]) {
                     inputMin.addEventListener(eventName, (evt: Event) => sliderEvent(inputMin, evt, true));
                     inputMax.addEventListener(eventName, (evt: Event) => sliderEvent(inputMax, evt, true));
@@ -68,8 +71,8 @@ export namespace Slider {
     function sliderEvent(input: HTMLElement, evt: Event, withNarrow: boolean): void {
         const labelNode: HTMLElement = input?.parentNode.querySelector(".slider_name");
         const dimension: string = labelNode.id;
-        let range: State.Range = getRange(dimension);
-        if (State.Range.isWithZeroLength(range)) {
+        let range: Model.Range = getRange(dimension);
+        if (Model.Range.isWithZeroLength(range)) {
             //Limit sliders
             const maxSlider: HTMLInputElement = getAxisMaxSlider(dimension);
             const minSlider: HTMLInputElement = getAxisMinSlider(dimension);
@@ -82,8 +85,8 @@ export namespace Slider {
             }
             range = getRange(dimension);
         }
-        if (State.Range.isNotValid(range)) {
-            range = State.Range.getValidated(range);
+        if (Model.Range.isNotValid(range)) {
+            range = Model.Range.getValidated(range);
             getAxisMinSlider(dimension).value = String(range.min);
             getAxisMaxSlider(dimension).value = String(range.max);
         }
@@ -107,15 +110,15 @@ export namespace Slider {
     }
 
     export function narrow(name: string, withForce: boolean = false): void {
-        const axisValues: State.AxisValues = AxisSelector.getAxisValues();
-        const isAxis: boolean = name === axisValues.x || name === axisValues.y;
+        const axisValues: Model.AxisValues = AxisSelector.getAxisValues();
+        const isAxis: boolean = name === Model.AxisValues.getValue(axisValues, Constant.Axis.X) || name === Model.AxisValues.getValue(axisValues, Constant.Axis.Y);
         let compoundsSum: number = 0
         let tranchesSum: number = 0;
-        const lettersX: ReadonlyArray<string> = getAxisLetters(axisValues.x);
-        const lettersY: ReadonlyArray<string> = getAxisLetters(axisValues.y);
-        const rangeX: State.Range = getAxisSliderRange(axisValues.x);
-        const rangeY: State.Range = getAxisSliderRange(axisValues.y);
-        if (!State.Range.isWithZeroLength(rangeX) && !State.Range.isWithZeroLength(rangeY)) {
+        const lettersX: ReadonlyArray<string> = getAxisLetters(Model.AxisValues.getValue(axisValues, Constant.Axis.X));
+        const lettersY: ReadonlyArray<string> = getAxisLetters(Model.AxisValues.getValue(axisValues, Constant.Axis.Y));
+        const rangeX: Model.Range = getAxisSliderRange(Model.AxisValues.getValue(axisValues, Constant.Axis.X));
+        const rangeY: Model.Range = getAxisSliderRange(Model.AxisValues.getValue(axisValues, Constant.Axis.Y));
+        if (!Model.Range.isWithZeroLength(rangeX) && !Model.Range.isWithZeroLength(rangeY)) {
             const finalsX: Array<string> = [];
             const finalsY: Array<string> = [];
             for (let i: number = rangeX.min; i < rangeX.max; i++) {
@@ -139,7 +142,7 @@ export namespace Slider {
                     }
                     compoundsSum += parseInt(cell?.getAttribute("num"));
                     const linkedTranches: ReadonlyArray<string> | undefined =
-                        Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT)?.cellToTranches.get(cellId);
+                        Calculation.CALC_RESULT.getFinalResult()?.cellToTranches.get(cellId);
                     if (linkedTranches !== undefined) {
                         tranchesSum += linkedTranches.length;
                     }
@@ -184,7 +187,7 @@ export namespace Slider {
             }
         }
         if (!isAxis) {
-            Values.render(axisValues)
+            ValuesDrawer.render(axisValues)
                 .catch(error => console.error(error));
         }
         //Add sums
@@ -221,15 +224,15 @@ export namespace Slider {
         cell?.classList.add("selected", `selected${position}`);
     }
 
-    function getAxisSliderRange(dimension: string): State.Range {
-        return State.Range.getValidated(new State.Range(
+    function getAxisSliderRange(dimension: string): Model.Range {
+        return Model.Range.getValidated(new Model.Range(
             getRangeMin(dimension) - 1,
             getRangeMax(dimension) - (KEY.dimensionsWithZero.has(dimension) ? 0 : 1)
         ));
     }
 
-    export function getRange(dimension: string): State.Range {
-        return new State.Range(getRangeMin(dimension), getRangeMax(dimension));
+    export function getRange(dimension: string): Model.Range {
+        return new Model.Range(getRangeMin(dimension), getRangeMax(dimension));
     }
 
     function getRangeMin(dimension: string): number {

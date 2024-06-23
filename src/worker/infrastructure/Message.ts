@@ -1,5 +1,6 @@
-import {Constant} from "../../Constant.ts";
-import {State, Calculation} from "../../State.ts";
+import {Calculation} from "../../compute/Calculation.ts";
+import {Constant} from "../../data/Constant.ts";
+import {Model} from "../../model/Model.ts";
 
 export namespace Message {
     abstract class ActionMessage {
@@ -21,12 +22,12 @@ export namespace Message {
 
     export class CalculationRequest extends ActionMessage {
         readonly isInit: boolean;
-        readonly axis: State.AxisValues;
-        readonly possibleValues: ReadonlyMap<string, State.Range>;
+        readonly axis: Model.AxisValues;
+        readonly possibleValues: ReadonlyMap<string, Model.Range>;
         readonly notSelectedDimensions: ReadonlyArray<string>;
 
-        constructor(isInit: boolean, axis: State.AxisValues,
-                    possibleValues: ReadonlyMap<string, State.Range>,
+        constructor(isInit: boolean, axis: Model.AxisValues,
+                    possibleValues: ReadonlyMap<string, Model.Range>,
                     notSelectedDimensions: ReadonlyArray<string>) {
             super(Constant.WorkerAction.CALCULATE);
             this.isInit = isInit;

@@ -1,29 +1,31 @@
-import {AxisSelector} from "./component/AxisSelector.ts";
-import {Loader} from "./component/Loader.ts";
-import {Slider} from "./component/Slider.ts";
-import {Constant} from "./Constant.ts";
-import {COLOR} from "./data/mapping/color.ts";
-import {KEY} from "./data/mapping/key.ts";
-import {Calculation, State} from "./State.ts";
-import {abbrN} from "./Utils.ts";
-import {Message} from "./worker/infrastructure/Message.ts";
-import {Pool} from "./worker/Pool.ts";
+import {Calculation} from "../compute/Calculation.ts";
+import {AxisSelector} from "../component/AxisSelector.ts";
+import {Loader} from "../component/Loader.ts";
+import {Slider} from "../component/Slider.ts";
+import {Constant} from "../data/Constant.ts";
+import {COLOR} from "../data/mapping/color.ts";
+import {KEY} from "../data/mapping/key.ts";
+import {Model} from "../model/Model.ts";
+import {State} from "../compute/State.ts";
+import {abbrN} from "../compute/Utils.ts";
+import {Message} from "../worker/infrastructure/Message.ts";
+import {Pool} from "../worker/Pool.ts";
 
-export namespace Values {
-    export async function render(axis: State.AxisValues, isInit: boolean = false): Promise<void> {
+export namespace ValuesDrawer {
+    export async function render(axis: Model.AxisValues, isInit: boolean = false): Promise<void> {
         if (!isInit && !State.Snapshot.isNeedRecalculation(axis)) { //Check if other dimensions are in use
             return;
         }
         Loader.showLoader();
         State.Snapshot.saveNew(axis);
-        const possibleValues: Map<string, State.Range> = new Map();
+        const possibleValues: Map<string, Model.Range> = new Map();
         if (!isInit) {
-            for (const [dimension, range]: [string, State.Range] of State.Snapshot.current()) {
+            for (const [dimension, range]: [string, Model.Range] of State.Snapshot.current()) {
                 const isZeroDimension: boolean = KEY.dimensionsWithZero.has(dimension);
-                if (State.Range.isWithZeroLength(range) && !isZeroDimension) {
+                if (Model.Range.isWithZeroLength(range) && !isZeroDimension) {
                     throw "Illegal state: this limit is not allowed";
                 }
-                possibleValues.set(dimension, isZeroDimension ? new State.Range(range.min - 1, range.max) : range);
+                possibleValues.set(dimension, isZeroDimension ? new Model.Range(range.min - 1, range.max) : range);
             }
         }
         //Clear cell values
@@ -33,7 +35,7 @@ export namespace Values {
                 element.setAttribute("num", "0");
             }
         }
-        Calculation.ResultProcessor.clearState(Calculation.CALC_RESULT);
+        Calculation.CALC_RESULT.clearState();
         Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, Array.from(State.Snapshot.current().keys())))
             .catch(error => console.error(error));
     }

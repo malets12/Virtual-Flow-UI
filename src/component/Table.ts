@@ -1,12 +1,12 @@
-import {Constant} from "../Constant.ts";
+import {Constant} from "../data/Constant.ts";
 import {KEY} from "../data/mapping/key.ts";
-import {State} from "../State.ts";
+import {Model} from "../model/Model.ts";
 import {AxisSelector} from "./AxisSelector.ts";
 
 export namespace Table {
     export const ID: string = "table";
 
-    export function renderTable(axisValues: State.AxisValues): HTMLTableElement {
+    export function renderTable(axisValues: Model.AxisValues): HTMLTableElement {
         const dimensionSelectorX: HTMLSelectElement = AxisSelector.createAxisSelector(Constant.Axis.X, axisValues);
         const dimensionSelectorY: HTMLSelectElement = AxisSelector.createAxisSelector(Constant.Axis.Y, axisValues);
         //Create table
@@ -14,21 +14,21 @@ export namespace Table {
         table.setAttribute("id", ID);
         const tableHolder: DocumentFragment = document.createDocumentFragment();
         //Header X
-        tableHolder.appendChild(createFirstLine(dimensionSelectorX, axisValues.x));
+        tableHolder.appendChild(createFirstLine(dimensionSelectorX, Model.AxisValues.getValue(axisValues, Constant.Axis.X)));
         //Header Y
-        tableHolder.appendChild(createSecondLine(dimensionSelectorY, axisValues.y));
+        tableHolder.appendChild(createSecondLine(dimensionSelectorY, Model.AxisValues.getValue(axisValues, Constant.Axis.Y)));
         //Call tranches
-        const mapY: ReadonlyMap<string, string> | undefined = KEY.map.get(axisValues.y);
-        const mapX: ReadonlyMap<string, string> | undefined = KEY.map.get(axisValues.x);
+        const mapY: ReadonlyMap<string, string> | undefined = KEY.map.get(Model.AxisValues.getValue(axisValues, Constant.Axis.Y));
+        const mapX: ReadonlyMap<string, string> | undefined = KEY.map.get(Model.AxisValues.getValue(axisValues, Constant.Axis.X));
         if (mapY === undefined || mapX === undefined) {
-            throw `One of the dimensions '${axisValues.x}', '${axisValues.y}' does not exist.`
+            throw `One of the dimensions '${Model.AxisValues.getValue(axisValues, Constant.Axis.X)}', '${Model.AxisValues.getValue(axisValues, Constant.Axis.Y)}' does not exist.`
         }
-        const hasZeroDimensionX: boolean = KEY.dimensionsWithZero.has(axisValues.x);
-        const hasZeroDimensionY: boolean = KEY.dimensionsWithZero.has(axisValues.y);
+        const hasZeroDimensionX: boolean = KEY.dimensionsWithZero.has(Model.AxisValues.getValue(axisValues, Constant.Axis.X));
+        const hasZeroDimensionY: boolean = KEY.dimensionsWithZero.has(Model.AxisValues.getValue(axisValues, Constant.Axis.Y));
         const keysY: ReadonlyArray<string> = Array.from(mapY.keys());
         const keysX: ReadonlyArray<string> = Array.from(mapX.keys());
-        const lengthY: number = getAxisRanges(axisValues.y) + (hasZeroDimensionY ? 1 : 0);
-        const lengthX: number = getAxisRanges(axisValues.x) + (hasZeroDimensionX ? 1 : 0);
+        const lengthY: number = getAxisRanges(Model.AxisValues.getValue(axisValues, Constant.Axis.Y)) + (hasZeroDimensionY ? 1 : 0);
+        const lengthX: number = getAxisRanges(Model.AxisValues.getValue(axisValues, Constant.Axis.X)) + (hasZeroDimensionX ? 1 : 0);
         //Cells
         for (let iterY: number = 0; iterY <= lengthY; iterY++) {
             const row: HTMLTableRowElement = document.createElement("tr");
@@ -36,7 +36,7 @@ export namespace Table {
             row.setAttribute("class", "row");
             for (let iterX: number = 0; iterX <= lengthX; iterX++) {
                 const cell: HTMLTableCellElement = document.createElement("td");
-                cell.style.height = `${641 / (getAxisRanges(axisValues.y) + 5)}px`;
+                cell.style.height = `${641 / (getAxisRanges(Model.AxisValues.getValue(axisValues, Constant.Axis.Y)) + 5)}px`;
                 if (iterY === 0 && iterX > 0) {
                     //First row
                     setClasses(cell, "axis cell frame unselected");
@@ -48,7 +48,7 @@ export namespace Table {
                     if (iterX === lengthX) {
                         setId(cell, "$#");
                         setText(cell, "Row sums:");
-                    } else if (hasZeroDimensionX && (iterX === 1 || axisValues.x === "EnamineCC")) {
+                    } else if (hasZeroDimensionX && (iterX === 1 || Model.AxisValues.getValue(axisValues, Constant.Axis.X) === "EnamineCC")) {
                         setText(cell, `${mapX.get(keysX[iterX - 1])}`);
                     } else if (hasZeroDimensionX) {
                         setText(cell, `${mapX.get(keysX[iterX - 2])} - ${mapX.get(keysX[iterX - 1])}`);
@@ -67,7 +67,7 @@ export namespace Table {
                         if (iterY === lengthY) {
                             setId(cell, "#$");
                             setText(cell, "Column sums:");
-                        } else if (hasZeroDimensionY && (iterY === 1 || axisValues.y === "EnamineCC")) {
+                        } else if (hasZeroDimensionY && (iterY === 1 || Model.AxisValues.getValue(axisValues, Constant.Axis.Y) === "EnamineCC")) {
                             setText(cell, `${mapY.get(keysY[iterY - 1])}`);
                         } else if (hasZeroDimensionY) {
                             setText(cell, `${mapY.get(keysY[iterY - 2])} - ${mapY.get(keysY[iterY - 1])}`);

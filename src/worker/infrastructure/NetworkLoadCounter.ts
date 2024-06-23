@@ -1,5 +1,5 @@
 import {AsyncCalculator, Calculator, Loader, Tranche} from "./Abstractions.ts";
-import {Constant} from "../../Constant.ts";
+import {Constant} from "../../data/Constant.ts";
 import {Message} from "./Message.ts";
 
 export default class NetworkLoadCounter extends AsyncCalculator implements Loader, Calculator {

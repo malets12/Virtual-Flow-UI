@@ -1,10 +1,23 @@
 import {LocalStorage} from "../component/LocalStorage.ts";
-import {Constant} from "../Constant.ts";
+import {Constant} from "../data/Constant.ts";
 import {Message} from "./infrastructure/Message.ts";
 import {JSWorkerFactory} from "./WorkerFactory.ts";
 
 export namespace Pool {
-    class WorkQueue {
+
+    export interface WorkQueue {
+        pop(): Promise<Message.LoadRequest | undefined>;
+        push(message: Message.LoadRequest): Promise<void>;
+        hasMessage(): Promise<boolean>;
+    }
+
+    export interface WorkerPool {
+        init(callback: (msg: any) => Promise<void>): Promise<void>;
+        takeNext(workerName: string): Promise<void>;
+        notifyAll(message: Message.CalculationRequest): Promise<void>;
+    }
+
+    class MessageWorkQueue implements WorkQueue {
         private readonly queue: Array<Message.LoadRequest> = [];
 
         async pop(): Promise<Message.LoadRequest | undefined> {
@@ -20,9 +33,9 @@ export namespace Pool {
         }
     }
 
-    export const WORK_QUEUE: WorkQueue = new WorkQueue();
+    export const WORK_QUEUE: WorkQueue = new MessageWorkQueue();
 
-    class WorkerPool {
+    class AsyncWorkerPool {
         private readonly workers: Map<string, Worker> = new Map();
 
         async init(callback: (msg: any) => Promise<void>): Promise<void> {
@@ -35,11 +48,11 @@ export namespace Pool {
                     .then(namedWorker => {
                         this.workers.set(namedWorker.name, namedWorker.worker);
                         for (let part: number = 0; part < maxPartsPerWorker; part++) {
-                            WorkerPool.postMessage(namedWorker);
+                            AsyncWorkerPool.postMessage(namedWorker);
                             workCounter++;
                         }
                         while (i === WORKER_COUNT - 1 && workCounter !== Constant.PARTS) {
-                            WorkerPool.postMessage(namedWorker);
+                            AsyncWorkerPool.postMessage(namedWorker);
                             workCounter++;
                         }
                     });
@@ -76,28 +89,5 @@ export namespace Pool {
         }
     }
 
-    export const WORKER_POOL: WorkerPool = new WorkerPool();
-
-}
-
-export namespace Saver {
-    class BackgroundSaver {
-        private readonly jsonsAsByteArrays: Array<Message.LoadComplete> = [];
-
-        async saveAll(): Promise<void> {
-            return JSWorkerFactory.newDatabaseSaver(async (message: any): Promise<void> => {
-                console.log(message.data.from, message.data.result);
-                LocalStorage.markHasLocalCopy();
-            }).then(namedWorker => namedWorker.worker.postMessage(this.jsonsAsByteArrays))
-                .catch(error => console.error(error))
-                .finally(() => this.jsonsAsByteArrays.length = 0);
-            //TODO? load collections
-        }
-
-        async add(message: Message.LoadComplete): Promise<void> {
-            this.jsonsAsByteArrays.push(message);
-        }
-    }
-
-    export const SAVER: BackgroundSaver = new BackgroundSaver();
+    export const WORKER_POOL: WorkerPool = new AsyncWorkerPool();
 }

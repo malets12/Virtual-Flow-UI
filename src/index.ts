@@ -1,10 +1,12 @@
+import {Calculation} from "./compute/Calculation.ts";
 import {Loader} from "./component/Loader.ts";
-import {Constant} from "./Constant.ts";
-import {Drawer} from "./Drawer.ts";
-import {Calculation, State} from "./State.ts";
-import {Values} from "./Values.ts";
+import {Constant} from "./data/Constant.ts";
+import {ComponentDrawer} from "./drawer/ComponentDrawer.ts";
+import {Model} from "./model/Model.ts";
+import {ValuesDrawer} from "./drawer/ValuesDrawer.ts";
 import {Message} from "./worker/infrastructure/Message.ts";
-import {Pool, Saver} from "./worker/Pool.ts";
+import {Pool} from "./worker/Pool.ts";
+import {Saver} from "./worker/Saver.ts";
 
 (async (): Promise<void> => {
     //Functions for init
@@ -32,7 +34,7 @@ import {Pool, Saver} from "./worker/Pool.ts";
                     if (loadMessage.source === Constant.Source.NETWORK) {
                         document.addEventListener(Constant.EventName.SAVE_TO_DATABASE, () => Saver.SAVER.saveAll(), false);
                     }
-                    Drawer.render(new State.AxisValues());
+                    ComponentDrawer.draw(new Model.AxisValues());
                 } else {
                     return Pool.WORKER_POOL.takeNext(loadMessage.from);
                 }
@@ -42,11 +44,11 @@ import {Pool, Saver} from "./worker/Pool.ts";
                 const calcMessage: Message.CalculationDone = message as Message.CalculationDone;
                 calcCounter++;
                 console.log(calcMessage.from, "Calculation done.");
-                Calculation.ResultProcessor.addResult(Calculation.CALC_RESULT, calcMessage.data);
-                const result: Calculation.CalculationResult | undefined = Calculation.ResultProcessor.finalResult(Calculation.CALC_RESULT);
+                Calculation.CALC_RESULT.addPart(calcMessage.data);
+                const result: Calculation.CalculationResult | undefined = Calculation.CALC_RESULT.getFinalResult();
                 if (calcCounter === WORKER_COUNT && result !== undefined) {
                     console.log("Full calculation done!");
-                    Values.fillCells(result);
+                    ValuesDrawer.fillCells(result);
                     calcCounter = 0;
                 }
                 break;

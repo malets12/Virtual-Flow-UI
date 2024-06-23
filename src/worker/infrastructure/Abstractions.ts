@@ -1,6 +1,7 @@
-import {Constant} from "../../Constant.ts";
+import {Calculation} from "../../compute/Calculation.ts";
+import {Constant} from "../../data/Constant.ts";
 import {ORDER} from "../../data/mapping/order.ts";
-import {Calculation, State} from "../../State.ts";
+import {Model} from "../../model/Model.ts";
 import {Message} from "./Message.ts";
 
 export type Tranche = { [s: string]: number };
@@ -23,24 +24,24 @@ export abstract class AsyncCalculator {
         const cellToTranches: Map<string, Array<string>> = new Map();
         let totalTranches: number = 0;
         let totalCompounds: number = 0;
-        const pos_x: number | undefined = ORDER.map.get(requestMessage.axis.x);
-        const pos_y: number | undefined = ORDER.map.get(requestMessage.axis.y);
+        const positionX: number | undefined = ORDER.map.get(Model.AxisValues.getValue(requestMessage.axis, Constant.Axis.X));
+        const positionY: number | undefined = ORDER.map.get(Model.AxisValues.getValue(requestMessage.axis, Constant.Axis.Y));
         for (const json: Tranche of this.JSONS) {
             for (const [key, val]: readonly [string, number] of Object.entries(json)) {
                 let add: boolean = true;
                 if (!requestMessage.isInit) {
                     add = requestMessage.notSelectedDimensions.every(dimension => {
-                        const pos_param: number | undefined = ORDER.map.get(dimension);
-                        const range: State.Range | undefined = requestMessage.possibleValues.get(dimension);
-                        const int: number = this.toInt(key.substring(pos_param - 1, pos_param));
-                        return State.Range.matches(range, int);
+                        const positionParameter: number | undefined = ORDER.map.get(dimension);
+                        const range: Model.Range | undefined = requestMessage.possibleValues.get(dimension);
+                        const int: number = this.toInt(key.substring(positionParameter - 1, positionParameter));
+                        return Model.Range.matches(range, int);
                     });
                 } else {
                     totalCompounds += val;
                     totalTranches++;
                 }
                 if (requestMessage.isInit || add) {
-                    const cellId: string = `${key.substring(pos_x - 1, pos_x)}${key.substring(pos_y - 1, pos_y)}`;
+                    const cellId: string = `${key.substring(positionX - 1, positionX)}${key.substring(positionY - 1, positionY)}`;
                     const cellCountsValue: number | undefined = cellCounts.get(cellId);
                     cellCounts.set(cellId, cellCountsValue === undefined ? val : cellCountsValue + val);
                     const tranchesArray: Array<string> | undefined = cellToTranches.get(cellId);

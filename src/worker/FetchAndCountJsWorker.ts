@@ -1,4 +1,4 @@
-import {Constant} from "../Constant.ts";
+import {Constant} from "../data/Constant.ts";
 import {Message} from "./infrastructure/Message.ts";
 import NetworkLoadCounter from "./infrastructure/NetworkLoadCounter.ts";
 

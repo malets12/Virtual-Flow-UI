@@ -1,4 +1,4 @@
-import {Constant} from "../Constant.ts";
+import {Constant} from "../data/Constant.ts";
 import {Message} from "./infrastructure/Message.ts";
 
 self.addEventListener("message", async (msg: any): Promise<void> => {

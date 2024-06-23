@@ -1,6 +1,6 @@
 import {AsyncCalculator, Calculator, Loader, Tranche} from "./Abstractions.ts";
 import {Message} from "./Message.ts";
-import {Constant} from "../../Constant.ts";
+import {Constant} from "../../data/Constant.ts";
 
 export default class DatabaseLoadCounter extends AsyncCalculator implements Loader, Calculator {
     readonly JSONS: Array<Tranche>;
