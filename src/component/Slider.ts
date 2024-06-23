@@ -134,8 +134,8 @@ export namespace Slider {
                 for (const x_final: string of finalsX) {
                     const cellId: string = `${x_final}${y_final}`;
                     const cell: HTMLElement | null = document.getElementById(cellId);
-                    if (isAxis || withForce) {
-                        cell?.classList.add("inbox");
+                    if ((isAxis || withForce) && cell !== null) {
+                        cell.classList.add("inbox");
                     }
                     compoundsSum += parseInt(cell?.getAttribute("num"));
                     const linkedTranches: ReadonlyArray<string> | undefined =
@@ -146,36 +146,40 @@ export namespace Slider {
                 }
             }
             if (isAxis || withForce) {
-                const selection: HTMLCollection = document.getElementsByClassName("selected");
-                if (selection.length > 0) {
-                    for (const cell: HTMLElement of selection) {
-                        cell.classList.remove("selected", "selectedRight", "selectedLeft", "selectedTop", "selectedBottom");
-                        cell.classList.add("unselected");
+                const cells: Map<string, HTMLElement> = new Map();
+                for (const letterX: string of [...lettersX, "#", "$"]) {
+                    for (const letterY: string of [...lettersY, "#", "$"]) {
+                        const cell: HTMLElement | null = document.getElementById(`${letterX}${letterY}`);
+                        if (cell !== null) {
+                            cells.set(cell.id, cell);
+                            cell.classList.remove("selected", "selectedRight", "selectedLeft", "selectedTop", "selectedBottom");
+                            cell.classList.add("unselected");
+                        }
                     }
                 }
                 for (let i: number = 0; i < lettersY.length; i++) {
-                    highlightRange(`${finalsX[finalsX.length - 1]}${lettersY[i]}`, "Right"); //Right vertical
-                    highlightRange(`${finalsX[0]}${lettersY[i]}`, "Left"); //Left vertical
+                    highlightRange(cells.get(`${finalsX[finalsX.length - 1]}${lettersY[i]}`), "Right"); //Right vertical
+                    highlightRange(cells.get(`${finalsX[0]}${lettersY[i]}`), "Left"); //Left vertical
                 }
                 for (let i: number = 0; i < lettersX.length; i++) {
-                    highlightRange(`${lettersX[i]}${finalsY[0]}`, "Top"); //Top horizontal
-                    highlightRange(`${lettersX[i]}${finalsY[finalsY.length - 1]}`, "Bottom"); //Bottom horizontal
+                    highlightRange(cells.get(`${lettersX[i]}${finalsY[0]}`), "Top"); //Top horizontal
+                    highlightRange(cells.get(`${lettersX[i]}${finalsY[finalsY.length - 1]}`), "Bottom"); //Bottom horizontal
                 }
                 for (const frame: string of ["#", "$"]) { //Borders
-                    const cells: ReadonlyArray<HTMLElement | null> = [
-                        document.getElementById(`${finalsX[finalsX.length - 1]}${frame}`),
-                        document.getElementById(`${finalsX[0]}${frame}`),
-                        document.getElementById(`${frame}${finalsY[0]}`),
-                        document.getElementById(`${frame}${finalsY[finalsY.length - 1]}`)
+                    const borderCells: ReadonlyArray<HTMLElement | undefined> = [
+                        cells.get(`${finalsX[finalsX.length - 1]}${frame}`),
+                        cells.get(`${finalsX[0]}${frame}`),
+                        cells.get(`${frame}${finalsY[0]}`),
+                        cells.get(`${frame}${finalsY[finalsY.length - 1]}`)
                     ];
-                    for (const cell: HTMLElement of cells) {
+                    for (const cell: HTMLElement of borderCells) {
                         cell?.classList.remove("unselected");
                         cell?.classList.add("selected");
                     }
-                    cells[0]?.classList.add("selectedRight");
-                    cells[1]?.classList.add("selectedLeft");
-                    cells[2]?.classList.add("selectedTop");
-                    cells[3]?.classList.add("selectedBottom");
+                    borderCells[0]?.classList.add("selectedRight");
+                    borderCells[1]?.classList.add("selectedLeft");
+                    borderCells[2]?.classList.add("selectedTop");
+                    borderCells[3]?.classList.add("selectedBottom");
                 }
             }
         }
@@ -184,8 +188,8 @@ export namespace Slider {
                 .catch(error => console.error(error));
         }
         //Add sums
-        State.TOTALS.setMin(Constant.Counter.COMPOUNDS, compoundsSum)
-        State.TOTALS.setMin(Constant.Counter.TRANCHES, tranchesSum);
+        State.Totals.setMin(Constant.Counter.COMPOUNDS, compoundsSum);
+        State.Totals.setMin(Constant.Counter.TRANCHES, tranchesSum);
         Wrapper.addSumWrappers();
     }
 
@@ -212,8 +216,7 @@ export namespace Slider {
         return slider;
     }
 
-    function highlightRange(id: string, position: string): void {
-        const cell: HTMLElement | null = document.getElementById(id);
+    function highlightRange(cell: HTMLElement | undefined, position: string): void {
         cell?.classList.remove("unselected");
         cell?.classList.add("selected", `selected${position}`);
     }
@@ -221,7 +224,7 @@ export namespace Slider {
     function getAxisSliderRange(dimension: string): State.Range {
         return State.Range.getValidated(new State.Range(
             getRangeMin(dimension) - 1,
-            KEY.dimensionsWithZero.has(dimension) ? getRangeMax(dimension) : getRangeMin(dimension) - 1
+            getRangeMax(dimension) - (KEY.dimensionsWithZero.has(dimension) ? 0 : 1)
         ));
     }
 
@@ -278,7 +281,7 @@ export namespace Slider {
             case "SlogP":
                 return [0, 63, 130, 197, 265, 332, 400];
             default:
-                throw `Illegal key '${name}' !`;
+                throw `Illegal key '${name}'`;
         }
     }
 }

@@ -1,7 +1,3 @@
-import {Downloads} from "./component/Downloads.ts";
-import {Table} from "./component/Table.ts";
-import {Wrapper} from "./component/Wrapper.ts";
-
 export function replaceAll(str:string, find:string, replace:string) {
     return str.replace(new RegExp(find.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1"), 'g'), replace);
 }
@@ -27,17 +23,4 @@ export function abbrN(value:number):string {
         return shortValue + suffixes[suffixNum];
     }
     return asString;
-}
-
-export function doFullReload():void {
-    window.localStorage.clear();
-    location.reload();
-}
-
-export function removePrevious(): void {
-    //Remove previous data
-    [Table.ID, Wrapper.INFO_ID, Wrapper.CONTROLS_ID, Downloads.ID, Downloads.COLLECTIONS_ID]
-        .map(id => document.getElementById(id))
-        .filter(element => element !== null)
-        .forEach(element => element.remove());
 }

@@ -76,10 +76,10 @@ export namespace Downloads {
     }
 
     function makeRegexp(): [string, string] {
-        State.SLIDERS_STATE.saveNew(new State.AxisValues(), true);
+        State.Snapshot.saveNew(new State.AxisValues(), true);
         const result: Array<Array<string>> = [];
         ORDER.map.forEach(() => result.push([]));
-        for (const [dimension, range]: [string, State.Range] of State.SLIDERS_STATE.map) {
+        for (const [dimension, range]: [string, State.Range] of State.Snapshot.current()) {
             const map: ReadonlyMap<string, string> | undefined = KEY.map.get(dimension);
             if (map === undefined) {
                 continue;

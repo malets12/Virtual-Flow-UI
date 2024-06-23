@@ -52,7 +52,7 @@ export namespace State {
         }
 
         static getValidated(range: Range): Range {
-            return this.isNotValid(range) ? new Range(range.max, range.min) : range;
+            return Range.isNotValid(range) ? new Range(range.max, range.min) : range;
         }
 
         static isWithZeroLength(range: Range): boolean {
@@ -60,51 +60,62 @@ export namespace State {
         }
     }
 
-    class Totals {
-        private _compounds: Range = new Range(0, 0);
-        private _tranches: Range = new Range(0, 0);
+    export class Totals {
+        private compounds: Range = new Range(0, 0);
+        private tranches: Range = new Range(0, 0);
 
-        get(what: Constant.Counter): Range {
-            return what === Constant.Counter.COMPOUNDS ? this._compounds : this._tranches;
-        }
-
-        setMax(counter: Constant.Counter, value: number): void {
+        static get(counter: Constant.Counter): Range {
             switch (counter) {
                 case Constant.Counter.COMPOUNDS: {
-                    this._compounds = new Range(this._compounds.min, value);
+                    return TOTALS.compounds;
+                }
+                case Constant.Counter.TRANCHES: {
+                    return TOTALS.tranches;
+                }
+            }
+        }
+
+        static setMax(counter: Constant.Counter, value: number): void {
+            switch (counter) {
+                case Constant.Counter.COMPOUNDS: {
+                    TOTALS.compounds = new Range(TOTALS.compounds.min, value);
                     break;
                 }
                 case Constant.Counter.TRANCHES: {
-                    this._tranches = new Range(this._tranches.min, value);
+                    TOTALS.tranches = new Range(TOTALS.tranches.min, value);
                     break;
                 }
             }
         }
 
-        setMin(counter: Constant.Counter, value: number): void {
+        static setMin(counter: Constant.Counter, value: number): void {
             switch (counter) {
                 case Constant.Counter.COMPOUNDS: {
-                    this._compounds = new Range(value, this._compounds.max);
+                    TOTALS.compounds = new Range(value, TOTALS.compounds.max);
                     break;
                 }
                 case Constant.Counter.TRANCHES: {
-                    this._tranches = new Range(value, this._tranches.max);
+                    TOTALS.tranches = new Range(value, TOTALS.tranches.max);
                     break;
                 }
             }
         }
     }
 
-    class Snapshot {
-        map: ReadonlyMap<string, Range> = new Map();
+    export class Snapshot {
+        private map: ReadonlyMap<string, Range> = new Map();
 
-        saveNew(axis: AxisValues, full: boolean = false): void {
-            this.map = this.currentState(axis, full);
+        static current(): ReadonlyMap<string, Range> {
+            return SLIDERS_STATE.map;
         }
 
-        isNeedRecalculation(axisValues: AxisValues): boolean {
-            const current: ReadonlyMap<string, Range> = this.currentState(axisValues);
-            for (const [key, val]: [string, Range] of this.map) {
+        static saveNew(axis: AxisValues, full: boolean = false): void {
+            SLIDERS_STATE.map = Snapshot.currentState(axis, full);
+        }
+
+        static isNeedRecalculation(axisValues: AxisValues): boolean {
+            const current: ReadonlyMap<string, Range> = Snapshot.currentState(axisValues);
+            for (const [key, val]: [string, Range] of SLIDERS_STATE.map) {
                 const currentVal: Range | undefined = current.get(key);
                 if (currentVal?.min !== val.min || currentVal?.max !== val.max) {
                     return true;
@@ -113,17 +124,17 @@ export namespace State {
             return false;
         }
 
-        private currentState(axisValues: AxisValues, full: boolean = false): ReadonlyMap<string, Range> {
+        private static currentState(axisValues: AxisValues, full: boolean = false): ReadonlyMap<string, Range> {
             const snapshot: Map<string, Range> = new Map();
             Array.from(KEY.map.keys())
-                .filter(key => full || (key !== axisValues.x && key !== axisValues.y))
+                .filter(dimension => full || (dimension !== axisValues.x && dimension !== axisValues.y))
                 .forEach(dimension => snapshot.set(dimension, Range.getValidated(Slider.getRange(dimension))));
             return snapshot;
         }
     }
 
-    export const TOTALS: Totals = new Totals();
-    export const SLIDERS_STATE: Snapshot = new Snapshot();
+    const TOTALS: Totals = new Totals();
+    const SLIDERS_STATE: Snapshot = new Snapshot();
 }
 
 export namespace Calculation { //TODO move to separate file, to interfaces
@@ -133,6 +144,11 @@ export namespace Calculation { //TODO move to separate file, to interfaces
 
         static addResult(holder: ResultProcessor, result: Calculation.CalculationResult): void {
             holder.calcResults.push(result);
+        }
+
+        static clearState(holder: ResultProcessor): void {
+            holder.calcResults.length = 0;
+            holder.finalResult = undefined;
         }
 
         static finalResult(holder: ResultProcessor): Calculation.CalculationResult | undefined {

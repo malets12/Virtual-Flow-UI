@@ -32,7 +32,7 @@ export namespace Wrapper {
         const max: HTMLSpanElement = document.createElement("span");
         pre.innerText = `${counter.charAt(0).toUpperCase()}${counter.slice(1)} selected: `;
         after.innerText = " from ";
-        const state: State.Range = State.TOTALS.get(counter);
+        const state: State.Range = State.Totals.get(counter);
         min.innerText = abbrN(state.min);
         max.innerText = abbrN(state.max);
         nodeHolder.append(pre, min, after, max);

@@ -1,6 +1,6 @@
 class Color {
-    readonly map: Map<number, string>;
     readonly limits: Array<number>;
+    readonly values: Array<string>;
 
     constructor() {
         const colors: { [s: string]: string } = {
@@ -21,12 +21,11 @@ class Color {
             20000000000: "grad14",
             50000000000: "grad15"
         };
-        this.map = new Map();
         this.limits = [];
+        this.values = [];
         for (const [key, val]: [string, string] of Object.entries(colors)) {
-            const num: number = parseInt(key);
-            this.map.set(num, val);
-            this.limits.push(num);
+            this.limits.push(parseInt(key));
+            this.values.push(val);
         }
         this.limits.push(Infinity);
     }

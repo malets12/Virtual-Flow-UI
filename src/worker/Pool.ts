@@ -4,9 +4,6 @@ import {Message} from "./infrastructure/Message.ts";
 import {JSWorkerFactory} from "./WorkerFactory.ts";
 
 export namespace Pool {
-
-    import NamedWorker = JSWorkerFactory.NamedWorker;
-
     class WorkQueue {
         private readonly queue: Array<Message.LoadRequest> = [];
 
@@ -49,7 +46,7 @@ export namespace Pool {
             }
         }
 
-        private static postMessage(namedWorker: NamedWorker): void {
+        private static postMessage(namedWorker: JSWorkerFactory.NamedWorker): void {
             WORK_QUEUE.pop()
                 .then(msg => {
                     if (msg !== undefined) {

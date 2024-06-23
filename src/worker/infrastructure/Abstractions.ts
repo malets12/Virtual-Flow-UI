@@ -26,10 +26,7 @@ export abstract class AsyncCalculator {
         const pos_x: number | undefined = ORDER.map.get(requestMessage.axis.x);
         const pos_y: number | undefined = ORDER.map.get(requestMessage.axis.y);
         for (const json: Tranche of this.JSONS) {
-            for (const entry: readonly [string, number] of Object.entries(json)) {
-                const key: string = entry[0];
-                const val: number = entry[1];
-                const cellId: string = key.substring(pos_x - 1, pos_x) + key.substring(pos_y - 1, pos_y);
+            for (const [key, val]: readonly [string, number] of Object.entries(json)) {
                 let add: boolean = true;
                 if (!requestMessage.isInit) {
                     add = requestMessage.notSelectedDimensions.every(dimension => {
@@ -39,16 +36,13 @@ export abstract class AsyncCalculator {
                         return State.Range.matches(range, int);
                     });
                 } else {
-                    totalCompounds = totalCompounds + val;
+                    totalCompounds += val;
                     totalTranches++;
                 }
                 if (requestMessage.isInit || add) {
+                    const cellId: string = `${key.substring(pos_x - 1, pos_x)}${key.substring(pos_y - 1, pos_y)}`;
                     const cellCountsValue: number | undefined = cellCounts.get(cellId);
-                    if (cellCountsValue === undefined) {
-                        cellCounts.set(cellId, val);
-                    } else {
-                        cellCounts.set(cellId, cellCountsValue + val);
-                    }
+                    cellCounts.set(cellId, cellCountsValue === undefined ? val : cellCountsValue + val);
                     const tranchesArray: Array<string> | undefined = cellToTranches.get(cellId);
                     if (tranchesArray === undefined) {
                         cellToTranches.set(cellId, [key]);

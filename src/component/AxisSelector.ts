@@ -1,7 +1,7 @@
 import {Constant} from "../Constant.ts";
 import {KEY} from "../data/mapping/key.ts";
+import {Drawer} from "../Drawer.ts";
 import {State} from "../State.ts";
-import {Values} from "../Values.ts";
 
 export namespace AxisSelector {
     export function createAxisSelector(axis: Constant.Axis, values: State.AxisValues): HTMLSelectElement {
@@ -12,16 +12,17 @@ export namespace AxisSelector {
 
         const options: DocumentFragment = document.createDocumentFragment();
         for (const dimension: string of KEY.map.keys()) {
-            if (State.AxisValues.getComplementValue(values, axis) !== dimension) {
-                const option: HTMLOptionElement = document.createElement("option");
-                option.setAttribute("value", dimension);
-                option.innerText = dimension;
-                options.appendChild(option);
+            if (State.AxisValues.getComplementValue(values, axis) === dimension) {
+                continue;
             }
+            const option: HTMLOptionElement = document.createElement("option");
+            option.setAttribute("value", dimension);
+            option.innerText = dimension;
+            options.appendChild(option);
         }
         select.appendChild(options);
         select.value = State.AxisValues.getValue(values, axis);
-        select.addEventListener("change", () => Values.render(AxisSelector.getAxisValues()));
+        select.addEventListener("change", () => Drawer.render(AxisSelector.getAxisValues()));
         return select;
     }
 
