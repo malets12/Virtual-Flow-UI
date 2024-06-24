@@ -29,11 +29,14 @@ export namespace ValuesDrawer {
             }
         }
         //Clear cell values
-        for (const className: string of ["sum", "field"]) {
-            for (const element: Element of document.getElementsByClassName(className)) {
-                element.textContent = "0";
-                element.setAttribute("num", "0");
-            }
+        for (const element: Element of document.getElementsByClassName("sum")) {
+            element.textContent = "0";
+            element.setAttribute("num", "0");
+        }
+        for (const element: Element of document.getElementsByClassName("field")) {
+            element.textContent = "0";
+            element.setAttribute("num", "0");
+            element.classList.remove(...COLOR.values);
         }
         Calculation.CALC_RESULT.clearState();
         Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, Array.from(State.Snapshot.current().keys())))
@@ -78,7 +81,6 @@ export namespace ValuesDrawer {
     }
 
     function addColour(cell: HTMLElement, num: number): void {
-        cell.classList.remove(...COLOR.values);
         for (let i: number = 0; i < COLOR.limits.length; i++) {
             if (num > COLOR.limits[i] && num < COLOR.limits[i + 1]) {
                 cell.classList.add(COLOR.values[i]);
