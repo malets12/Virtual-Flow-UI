@@ -26,6 +26,9 @@ export abstract class AsyncCalculator {
         let totalCompounds: number = 0;
         const positionX: number | undefined = ORDER.map.get(Model.AxisValues.getValue(requestMessage.axis, Constant.Axis.X));
         const positionY: number | undefined = ORDER.map.get(Model.AxisValues.getValue(requestMessage.axis, Constant.Axis.Y));
+        if (positionX === undefined || positionY === undefined) {
+            throw `For ${requestMessage.axis} undefined positionParameter`;
+        }
         for (const json: Tranche of this.JSONS) {
             for (const [key, val]: readonly [string, number] of Object.entries(json)) {
                 let add: boolean = true;
@@ -33,7 +36,10 @@ export abstract class AsyncCalculator {
                     add = requestMessage.notSelectedDimensions.every(dimension => {
                         const positionParameter: number | undefined = ORDER.map.get(dimension);
                         const range: Model.Range | undefined = requestMessage.possibleValues.get(dimension);
-                        const int: number = this.toInt(key.substring(positionParameter - 1, positionParameter));
+                        if (positionParameter === undefined || range === undefined) {
+                            throw `For ${dimension} undefined positionParameter or range`;
+                        }
+                        const int: number = this.toInt(key.substring(positionParameter, positionParameter + 1));
                         return Model.Range.matches(range, int);
                     });
                 } else {
@@ -41,7 +47,7 @@ export abstract class AsyncCalculator {
                     totalTranches++;
                 }
                 if (requestMessage.isInit || add) {
-                    const cellId: string = `${key.substring(positionX - 1, positionX)}${key.substring(positionY - 1, positionY)}`;
+                    const cellId: string = `${key.substring(positionX, positionX + 1)}${key.substring(positionY, positionY + 1)}`;
                     const cellCountsValue: number | undefined = cellCounts.get(cellId);
                     cellCounts.set(cellId, cellCountsValue === undefined ? val : cellCountsValue + val);
                     const tranchesArray: Array<string> | undefined = cellToTranches.get(cellId);

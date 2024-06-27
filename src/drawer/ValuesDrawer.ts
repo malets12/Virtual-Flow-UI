@@ -25,7 +25,9 @@ export namespace ValuesDrawer {
                 if (Model.Range.isWithZeroLength(range) && !isZeroDimension) {
                     throw "Illegal state: this limit is not allowed";
                 }
-                possibleValues.set(dimension, isZeroDimension ? new Model.Range(range.min - 1, range.max) : range);
+                possibleValues.set(dimension, isZeroDimension
+                    ? new Model.Range(range.min - 2, range.max)
+                    : new Model.Range(range.min - 1, range.max));
             }
         }
         //Clear cell values

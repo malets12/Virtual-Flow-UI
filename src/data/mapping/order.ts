@@ -5,24 +5,24 @@ class Order {
 
     constructor() {
         const order: { [s: string]: number } = {
-            "MW": 1,
-            "SlogP": 2,
-            "HBA": 3,
-            "HBD": 4,
-            "RotB": 5,
-            "TPSA": 6,
-            "MR": 7,
-            "logS": 8,
-            "AromProportion": 9,
-            "FormCharge": 10,
-            "PosCharge": 11,
-            "NegCharge": 12,
-            "Fsp3": 13,
-            "ChiralCenter": 14,
-            "DoubleBondIsomer": 15,
-            "HalogenAC": 16,
-            "SulfurAC": 17,
-            "EnamineCC": 18
+            "MW": 0,
+            "SlogP": 1,
+            "HBA": 2,
+            "HBD": 3,
+            "RotB": 4,
+            "TPSA": 5,
+            "MR": 6,
+            "logS": 7,
+            "AromProportion": 8,
+            "FormCharge": 9,
+            "PosCharge": 10,
+            "NegCharge": 11,
+            "Fsp3": 12,
+            "ChiralCenter": 13,
+            "DoubleBondIsomer": 14,
+            "HalogenAC": 15,
+            "SulfurAC": 16,
+            "EnamineCC": 17
         };
         this.map = objToStrMap(order);
     }

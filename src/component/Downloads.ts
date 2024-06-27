@@ -86,11 +86,12 @@ export namespace Downloads {
             if (map === undefined) {
                 continue;
             }
+            const isZeroDimension: boolean = KEY.dimensionsWithZero.has(dimension);
             const keys: Array<string> = Array.from(map.keys());
-            const arr: Array<string> = result[ORDER.map.get(dimension) - 1];
+            const arr: Array<string> = result[ORDER.map.get(dimension)];
             const min: number = range.min - 1;
-            const max: number = KEY.dimensionsWithZero.has(dimension) ? range.max : range.max - 1;
-            if (!KEY.dimensionsWithZero.has(dimension)) {
+            const max: number = isZeroDimension ? range.max : range.max - 1;
+            if (!isZeroDimension) {
                 keys.shift();
             }
             for (let i: number = min; i < max; i++) {
