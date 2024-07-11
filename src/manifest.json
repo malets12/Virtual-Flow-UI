@@ -1,0 +1,13 @@
+{
+  "name": "VirtualFlow 2.0 REAL Space Tranches",
+  "short_name": "VirtualFlow 2.0 UI",
+  "lang": "en-US",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#fff",
+  "icons": [{
+    "src": "asset/VF-icon.png",
+    "sizes": "any",
+    "type": "image/png"
+  }]
+}

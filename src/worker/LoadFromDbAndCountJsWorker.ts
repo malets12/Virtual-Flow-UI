@@ -3,7 +3,7 @@ import DatabaseLoadCounter from "./infrastructure/DatabaseLoadCounter.ts";
 import {Message} from "./infrastructure/Message.ts";
 
 const worker: DatabaseLoadCounter = new DatabaseLoadCounter(self.name);
-self.addEventListener("message", async (msg: any): Promise<void> => {
+self.addEventListener("message", async (msg: MessageEvent): Promise<void> => {
     const message: Message.LoadRequest | Message.CalculationRequest = msg.data;
     switch (message.action) {
         case Constant.WorkerAction.LOAD: {

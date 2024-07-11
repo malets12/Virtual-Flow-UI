@@ -35,10 +35,10 @@ export namespace Pool {
 
     export const WORK_QUEUE: WorkQueue = new MessageWorkQueue();
 
-    class AsyncWorkerPool {
+    class AsyncWorkerPool implements WorkerPool{
         private readonly workers: Map<string, Worker> = new Map();
 
-        async init(callback: (msg: any) => Promise<void>): Promise<void> {
+        async init(callback: (msg: MessageEvent) => Promise<void>): Promise<void> {
             const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
             const loadFromDB: boolean = LocalStorage.hasLocalCopy();
             const maxPartsPerWorker: number = Constant.PARTS / WORKER_COUNT;

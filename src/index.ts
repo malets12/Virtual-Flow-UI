@@ -11,7 +11,7 @@ import {Saver} from "./worker/Saver.ts";
 (async (): Promise<void> => {
     //Functions for init
     const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
-    const callback = async (msg: any): Promise<void> => {
+    const callback = async (msg: MessageEvent): Promise<void> => {
         const message: Message.WorkerMessage | Message.LoadComplete | Message.CalculationDone = msg.data;
         switch (message.action) {
             case Constant.WorkerAction.LOAD: {

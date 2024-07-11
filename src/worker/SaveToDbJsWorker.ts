@@ -1,7 +1,7 @@
 import {Constant} from "../data/Constant.ts";
 import {Message} from "./infrastructure/Message.ts";
 
-self.addEventListener("message", async (msg: any): Promise<void> => {
+self.addEventListener("message", async (msg: MessageEvent): Promise<void> => {
     const req: IDBOpenDBRequest = indexedDB.open(Constant.Database.NAME, Constant.Database.VERSION);
     req.onsuccess = (): void => {
         const db: IDBDatabase = req.result;

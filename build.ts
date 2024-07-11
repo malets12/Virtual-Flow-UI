@@ -11,10 +11,11 @@ const build = await Bun.build({
         './src/index.ts',
         './src/worker/SaveToDbJsWorker.ts',
         './src/worker/FetchAndCountJsWorker.ts',
-        './src/worker/LoadFromDbAndCountJsWorker.ts'
+        './src/worker/LoadFromDbAndCountJsWorker.ts',
+        './src/ServiceWorker.ts'
     ],
     outdir: outdir,
-    splitting: true,
+    splitting: false,
     minify: true
 });
 for (const log of build.logs) {
@@ -25,10 +26,9 @@ for (const log of build.logs) {
     }
 }
 
-const indexFile = Bun.file("./src/index.html");
-const stylesFile = Bun.file("./src/styles.css");
-await Bun.write("./out/index.html", indexFile);
-await Bun.write("./out/styles.css", stylesFile);
+for (const fileName: string of ["index.html", "styles.css", "manifest.json"]) {
+    await Bun.write(`./out/${fileName}`, Bun.file(`./src/${fileName}`));
+}
 
 const jsonGlob = new Bun.Glob("*.json");
 const jsonDir = "./src/data/tranche";
@@ -36,3 +36,6 @@ for await (const fileName: string of jsonGlob.scan(jsonDir)) {
     const jsonFile = Bun.file(`${jsonDir}/${fileName}`);
     await Bun.write(`./out/worker/tranche/${fileName}`, jsonFile);
 }
+
+const icon = Bun.file("./asset/VF-icon.png");
+await Bun.write("./out/asset/VF-icon.png", icon);
