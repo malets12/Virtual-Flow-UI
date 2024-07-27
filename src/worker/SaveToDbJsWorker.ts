@@ -1,7 +1,8 @@
 import {Constant} from "../data/Constant.ts";
 import {Message} from "./infrastructure/Message.ts";
 
-self.addEventListener("message", async (msg: any): Promise<void> => {
+self.addEventListener("message", async (msg: MessageEvent): Promise<void> => {
+    //TODO switch
     const req: IDBOpenDBRequest = indexedDB.open(Constant.Database.NAME, Constant.Database.VERSION);
     req.onsuccess = (): void => {
         const db: IDBDatabase = req.result;
@@ -21,7 +22,7 @@ self.addEventListener("message", async (msg: any): Promise<void> => {
 function addDBEntry(db: IDBDatabase, jsons: ReadonlyArray<Message.LoadComplete>): void {
     const transaction: IDBTransaction = db.transaction(Constant.Database.STORE_NAME, "readwrite");
     transaction.oncomplete = (): void => {
-        self.postMessage(new Message.Save(self.name, "Successfully saved to DB."));
+        self.postMessage(new Message.SavingDone(self.name, Constant.DataType.TRANCHES, "Successfully saved to DB."));
         self.close();
     };
     transaction.onerror = (event: Event): void => {

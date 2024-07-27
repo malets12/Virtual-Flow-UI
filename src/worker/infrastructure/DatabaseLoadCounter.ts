@@ -20,7 +20,7 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
         return super.calculatePart(requestMessage).then(result => new Message.CalculationDone(this.label, result));
     }
 
-    async load(loadMessage: Message.LoadRequest): Promise<Message.LoadComplete | Message.WorkerMessage> {
+    async load(loadMessage: Message.NetworkLoadRequest): Promise<Message.LoadComplete | Message.WorkerMessage> {
         return new Promise((resolve) => {
             const req: IDBOpenDBRequest = indexedDB.open(Constant.Database.NAME, Constant.Database.VERSION);
             req.onsuccess = (): void => {

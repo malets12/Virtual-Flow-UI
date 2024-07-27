@@ -11,8 +11,8 @@ import {Saver} from "./worker/Saver.ts";
 (async (): Promise<void> => {
     //Functions for init
     const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
-    const callback = async (msg: any): Promise<void> => {
-        const message: Message.WorkerMessage | Message.LoadComplete | Message.CalculationDone = msg.data;
+    const callback = async (msg: MessageEvent): Promise<void> => {
+        const message: Message.WorkerMessage = msg.data;
         switch (message.action) {
             case Constant.WorkerAction.LOAD: {
                 const loadMessage: Message.LoadComplete = message as Message.LoadComplete;
@@ -64,7 +64,7 @@ import {Saver} from "./worker/Saver.ts";
     let calcCounter: number = 0;
     const init: Array<Promise<void>> = [];
     for (let i: number = 0; i < Constant.PARTS; i++) {
-        init.push(Pool.WORK_QUEUE.push(new Message.LoadRequest(`tranche/tranche${i}.json`)));
+        init.push(Pool.WORK_QUEUE.push(new Message.NetworkLoadRequest(`tranche/tranche${i}.json`)));
     }
     Promise.all(init).then(() => Pool.WORKER_POOL.init(callback));
 })();

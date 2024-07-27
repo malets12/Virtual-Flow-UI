@@ -23,7 +23,7 @@ export namespace ComponentDrawer {
         ValuesDrawer.render(axis, true)
             .then(() => Slider.narrow("", true))
             .catch(error => console.error(error));
-        if (!LocalStorage.hasLocalCopy()) {
+        if (!LocalStorage.hasTranchesLocalCopy()) {
             document.dispatchEvent(new Event(Constant.EventName.SAVE_TO_DATABASE));
         }
     }

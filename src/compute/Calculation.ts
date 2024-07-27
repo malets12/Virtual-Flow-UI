@@ -8,7 +8,7 @@ export namespace Calculation {
 
     class CalculationResultProcessor implements ResultProcessor {
         private calcResults: Array<CalculationResult> = [];
-        private finalResult?: CalculationResult;
+        private finalResult: CalculationResult | undefined;
 
         addPart(result: Calculation.CalculationResult): void {
             this.calcResults.push(result);
@@ -66,6 +66,24 @@ export namespace Calculation {
             this.cellToTranches = cellToTranches;
             this.totalTranches = totalTranches;
             this.totalCompounds = totalCompounds;
+        }
+
+        //Adaptation of https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
+        static toString(item: CalculationResult): string {
+            return JSON.stringify(item, (key: string, value: any): void =>
+                value instanceof Map ? {dataType: "Map", data: [...value]} : value);
+        }
+
+        static fromString(item: string): CalculationResult {
+            const object: { [s: string]: any } = JSON.parse(item, (key: string, value: any): void =>
+                typeof value === "object" && value !== null && value.dataType === "Map" ? new Map(value.data) : value);
+            console.log("crude", object); //TODO
+            return new CalculationResult(
+                object["cellCounts"],
+                object["cellToTranches"],
+                object["totalTranches"],
+                object["totalCompounds"]
+            );
         }
     }
 }

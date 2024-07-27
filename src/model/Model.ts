@@ -30,6 +30,10 @@ export namespace Model {
                     return values.x;
             }
         }
+
+        static equals(values1: AxisValues, values2: AxisValues): boolean {
+            return values1.x === values2.x && values1.y === values2.y;
+        }
     }
 
     export class Range {

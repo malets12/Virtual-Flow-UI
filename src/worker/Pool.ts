@@ -6,25 +6,25 @@ import {JSWorkerFactory} from "./WorkerFactory.ts";
 export namespace Pool {
 
     export interface WorkQueue {
-        pop(): Promise<Message.LoadRequest | undefined>;
-        push(message: Message.LoadRequest): Promise<void>;
+        pop(): Promise<Message.NetworkLoadRequest | undefined>;
+        push(message: Message.NetworkLoadRequest): Promise<void>;
         hasMessage(): Promise<boolean>;
     }
 
     export interface WorkerPool {
-        init(callback: (msg: any) => Promise<void>): Promise<void>;
+        init(callback: (msg: MessageEvent) => Promise<void>): Promise<void>;
         takeNext(workerName: string): Promise<void>;
         notifyAll(message: Message.CalculationRequest): Promise<void>;
     }
 
     class MessageWorkQueue implements WorkQueue {
-        private readonly queue: Array<Message.LoadRequest> = [];
+        private readonly queue: Array<Message.NetworkLoadRequest> = [];
 
-        async pop(): Promise<Message.LoadRequest | undefined> {
+        async pop(): Promise<Message.NetworkLoadRequest | undefined> {
             return this.queue.pop();
         }
 
-        async push(message: Message.LoadRequest): Promise<void> {
+        async push(message: Message.NetworkLoadRequest): Promise<void> {
             this.queue.push(message);
         }
 
@@ -35,12 +35,12 @@ export namespace Pool {
 
     export const WORK_QUEUE: WorkQueue = new MessageWorkQueue();
 
-    class AsyncWorkerPool {
+    class AsyncWorkerPool implements WorkerPool{
         private readonly workers: Map<string, Worker> = new Map();
 
-        async init(callback: (msg: any) => Promise<void>): Promise<void> {
+        async init(callback: (msg: MessageEvent) => Promise<void>): Promise<void> {
             const WORKER_COUNT: number = window.navigator.hardwareConcurrency;
-            const loadFromDB: boolean = LocalStorage.hasLocalCopy();
+            const loadFromDB: boolean = LocalStorage.hasTranchesLocalCopy();
             const maxPartsPerWorker: number = Constant.PARTS / WORKER_COUNT;
             let workCounter: number = 0;
             for (let i: number = 0; i < WORKER_COUNT; i++) {

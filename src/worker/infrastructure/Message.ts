@@ -11,12 +11,29 @@ export namespace Message {
         }
     }
 
-    export class LoadRequest extends ActionMessage {
+    abstract class LoadRequest extends ActionMessage {
+        readonly source: Constant.Source;
+        readonly dataType: Constant.DataType;
+
+        protected constructor(source: Constant.Source, dataType: Constant.DataType) {
+            super(Constant.WorkerAction.LOAD);
+            this.source = source;
+            this.dataType = dataType;
+        }
+    }
+
+    export class NetworkLoadRequest extends LoadRequest {
         readonly jsonUrl: string;
 
         constructor(jsonUrl: string) {
-            super(Constant.WorkerAction.LOAD);
+            super(Constant.Source.NETWORK, Constant.DataType.TRANCHES);
             this.jsonUrl = jsonUrl;
+        }
+    }
+
+    export class DBLoadRequest extends LoadRequest {
+        constructor() {
+            super(Constant.Source.DATABASE, Constant.DataType.INITIAL_STATE);
         }
     }
 
@@ -34,6 +51,33 @@ export namespace Message {
             this.axis = axis;
             this.possibleValues = possibleValues;
             this.notSelectedDimensions = notSelectedDimensions;
+        }
+    }
+    
+    abstract class SaveRequest extends ActionMessage {
+        readonly dataType: Constant.DataType;
+
+        protected constructor(dataType: Constant.DataType) {
+            super(Constant.WorkerAction.SAVE);
+            this.dataType = dataType;
+        }
+    }
+
+    export class SaveTranchesRequest extends SaveRequest {
+        readonly jsons: ReadonlyArray<LoadComplete>;
+
+        constructor(jsons: ReadonlyArray<LoadComplete>) {
+            super(Constant.DataType.TRANCHES);
+            this.jsons = jsons;
+        }
+    }
+
+    export class SaveInitialStateRequest extends SaveRequest {
+        readonly state: Calculation.CalculationResult;
+
+        constructor(state: Calculation.CalculationResult) {
+            super(Constant.DataType.INITIAL_STATE);
+            this.state = state;
         }
     }
 
@@ -63,16 +107,18 @@ export namespace Message {
         readonly data: Calculation.CalculationResult;
 
         constructor(from: string, data: Calculation.CalculationResult) {
-            super(Constant.WorkerAction.CALCULATE, from)
+            super(Constant.WorkerAction.CALCULATE, from);
             this.data = data;
         }
     }
 
-    export class Save extends WorkerMessage {
+    export class SavingDone extends WorkerMessage {
+        readonly dataType: Constant.DataType;
         readonly result: string;
 
-        constructor(from: string, result: string) {
-            super(Constant.WorkerAction.SAVE_COMPLETE, from);
+        constructor(from: string, dataType: Constant.DataType, result: string) {
+            super(Constant.WorkerAction.SAVE, from);
+            this.dataType = dataType;
             this.result = result;
         }
     }

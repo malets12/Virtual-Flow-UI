@@ -14,8 +14,8 @@ const build = await Bun.build({
         './src/worker/LoadFromDbAndCountJsWorker.ts'
     ],
     outdir: outdir,
-    splitting: true,
-    minify: true
+    splitting: false,
+    minify: false //TODO
 });
 for (const log of build.logs) {
     if (build.success) {
@@ -25,10 +25,9 @@ for (const log of build.logs) {
     }
 }
 
-const indexFile = Bun.file("./src/index.html");
-const stylesFile = Bun.file("./src/styles.css");
-await Bun.write("./out/index.html", indexFile);
-await Bun.write("./out/styles.css", stylesFile);
+for (const fileName: string of ["index.html", "styles.css"]) {
+    await Bun.write(`./out/${fileName}`, Bun.file(`./src/${fileName}`));
+}
 
 const jsonGlob = new Bun.Glob("*.json");
 const jsonDir = "./src/data/tranche";

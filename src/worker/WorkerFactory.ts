@@ -9,10 +9,10 @@ export namespace JSWorkerFactory {
         readonly _name: string;
         readonly _worker: Worker;
 
-        protected constructor(fileName: string, callback: (msg: any) => Promise<void>, order: number) {
+        protected constructor(fileName: string, callback: (msg: MessageEvent) => Promise<void>, order: number) {
             this._name = `Worker-${order}`;
             this._worker = new Worker(fileName, { name: this._name, type: "module" });
-            this._worker.addEventListener("message", (msg: any) => callback(msg), false);
+            this._worker.addEventListener("message", (msg: MessageEvent) => callback(msg), false);
         }
 
         get name(): string {
@@ -25,32 +25,32 @@ export namespace JSWorkerFactory {
     }
 
     class NetworkLoader extends AbstractWorker {
-        constructor(callback: (msg: any) => Promise<void>, order: number) {
+        constructor(callback: (msg: MessageEvent) => Promise<void>, order: number) {
             super("worker/FetchAndCountJsWorker.js", callback, order);
         }
     }
 
     class DatabaseLoader extends AbstractWorker {
-        constructor(callback: (msg: any) => Promise<void>, order: number) {
+        constructor(callback: (msg: MessageEvent) => Promise<void>, order: number) {
             super("worker/LoadFromDbAndCountJsWorker.js", callback, order);
         }
     }
 
     class DatabaseSaver extends AbstractWorker {
-        constructor(callback: (msg: any) => Promise<void>) {
+        constructor(callback: (msg: MessageEvent) => Promise<void>) {
             super("worker/SaveToDbJsWorker.js", callback, 999);
         }
     }
 
-    export async function newNetworkLoader(callback: (msg: any) => Promise<void>, order: number): Promise<JSWorkerFactory.NamedWorker> {
+    export async function newNetworkLoader(callback: (msg: MessageEvent) => Promise<void>, order: number): Promise<NamedWorker> {
         return Promise.resolve(new NetworkLoader(callback, order));
     }
 
-    export async function newDatabaseLoader(callback: (msg: any) => Promise<void>, order: number): Promise<JSWorkerFactory.NamedWorker> {
+    export async function newDatabaseLoader(callback: (msg: MessageEvent) => Promise<void>, order: number): Promise<NamedWorker> {
         return Promise.resolve(new DatabaseLoader(callback, order));
     }
 
-    export async function newDatabaseSaver(callback: (message: any) => Promise<void>): Promise<JSWorkerFactory.NamedWorker> {
+    export async function newDatabaseSaver(callback: (message: MessageEvent) => Promise<void>): Promise<NamedWorker> {
         return Promise.resolve(new DatabaseSaver(callback));
     }
 }

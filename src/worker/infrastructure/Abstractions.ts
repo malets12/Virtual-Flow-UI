@@ -7,7 +7,7 @@ import {Message} from "./Message.ts";
 export type Tranche = { [s: string]: number };
 
 export interface Loader {
-    load(loadMessage: Message.LoadRequest): Promise<Message.LoadComplete | Message.WorkerMessage>;
+    load(loadMessage: Message.NetworkLoadRequest): Promise<Message.LoadComplete | Message.WorkerMessage>;
 }
 
 export interface Calculator {
