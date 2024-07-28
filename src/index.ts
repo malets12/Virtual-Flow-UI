@@ -14,8 +14,8 @@ import {Saver} from "./worker/Saver.ts";
     const callback = async (msg: MessageEvent): Promise<void> => {
         const message: Message.WorkerMessage = msg.data;
         switch (message.action) {
-            case Constant.WorkerAction.LOAD: {
-                const loadMessage: Message.LoadComplete = message as Message.LoadComplete;
+            case Constant.Action.LOAD: {
+                const loadMessage: Message.TranchesLoadComplete = message as Message.TranchesLoadComplete;
                 loadCounter++;
                 switch (loadMessage.source) {
                     case Constant.Source.NETWORK: {
@@ -40,7 +40,7 @@ import {Saver} from "./worker/Saver.ts";
                 }
                 break;
             }
-            case Constant.WorkerAction.CALCULATE: {
+            case Constant.Action.CALCULATE: {
                 const calcMessage: Message.CalculationDone = message as Message.CalculationDone;
                 calcCounter++;
                 console.log(calcMessage.from, "Calculation done.");
@@ -53,7 +53,7 @@ import {Saver} from "./worker/Saver.ts";
                 }
                 break;
             }
-            case Constant.WorkerAction.RELOAD: {
+            case Constant.Action.RELOAD: {
                 doFullReload();
                 break;
             }

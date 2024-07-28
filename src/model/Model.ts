@@ -61,4 +61,14 @@ export namespace Model {
             return range.min === range.max;
         }
     }
+
+    export class DBEntry {
+        readonly part: string;
+        readonly bytes: any;
+
+        constructor(part: string, bytes: any) {
+            this.part = part;
+            this.bytes = bytes;
+        }
+    }
 }

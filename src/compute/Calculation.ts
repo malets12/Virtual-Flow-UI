@@ -69,6 +69,7 @@ export namespace Calculation {
         }
 
         //Adaptation of https://stackoverflow.com/questions/29085197/how-do-you-json-stringify-an-es6-map
+        //TODO check is serialization required
         static toString(item: CalculationResult): string {
             return JSON.stringify(item, (key: string, value: any): void =>
                 value instanceof Map ? {dataType: "Map", data: [...value]} : value);
@@ -77,7 +78,6 @@ export namespace Calculation {
         static fromString(item: string): CalculationResult {
             const object: { [s: string]: any } = JSON.parse(item, (key: string, value: any): void =>
                 typeof value === "object" && value !== null && value.dataType === "Map" ? new Map(value.data) : value);
-            console.log("crude", object); //TODO
             return new CalculationResult(
                 object["cellCounts"],
                 object["cellToTranches"],

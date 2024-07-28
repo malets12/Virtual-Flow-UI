@@ -3,9 +3,9 @@ export namespace Constant {
     export const PARTS: number = 24;
     export const FIRST_COLUMN_SLIDERS: ReadonlyArray<string> = ["MW", "SlogP", "HBA", "HBD", "RotB", "TPSA", "MR", "logS", "AromProportion"];
 
-    export enum WorkerAction { LOAD, CALCULATE, RELOAD, SAVE}
+    export enum Action { LOAD, CALCULATE, RELOAD, SAVE}
 
-    export enum DataType { TRANCHES, INITIAL_STATE }
+    export enum DataType { TRANCHES = "Tranches", INITIAL_STATE = "Initial State" }
 
     export enum Database { NAME = "tranches-db", VERSION = 1, STORE_NAME = "tranches-jsons" }
 

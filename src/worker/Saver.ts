@@ -10,19 +10,19 @@ export namespace Saver {
 
     export interface BackgroundSaver {
         saveAll(): Promise<void>;
-        add(message: Message.LoadComplete): Promise<void>;
+        add(message: Message.TranchesLoadComplete): Promise<void>;
         loadInitial(): Promise<void>;
     }
 
     class AsyncBackgroundSaver implements BackgroundSaver {
         private worker: Worker;
-        private readonly jsonsAsByteArrays: Array<Message.LoadComplete> = [];
+        private readonly jsonsAsByteArrays: Array<Message.TranchesLoadComplete> = [];
 
         async saveAll(): Promise<void> {
             const callback = async (msg: MessageEvent): Promise<void> => {
                 const message: Message.WorkerMessage = msg.data;
                 switch (message.action) {
-                    case Constant.WorkerAction.SAVE: {
+                    case Constant.Action.SAVE: {
                         const saveMessage: Message.SavingDone = message as Message.SavingDone;
                         console.log(saveMessage.from, `${saveMessage.result} for ${saveMessage.dataType}`);
                         switch (saveMessage.dataType) {
@@ -37,7 +37,7 @@ export namespace Saver {
                         }
                         break;
                     }
-                    case Constant.WorkerAction.LOAD: {
+                    case Constant.Action.LOAD: {
                         //TODO
                         break;
                     }
@@ -52,7 +52,7 @@ export namespace Saver {
             //TODO? load collections
         }
 
-        async add(message: Message.LoadComplete): Promise<void> {
+        async add(message: Message.TranchesLoadComplete): Promise<void> {
             this.jsonsAsByteArrays.push(message);
         }
 

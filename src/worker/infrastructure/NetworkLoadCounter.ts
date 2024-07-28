@@ -18,7 +18,7 @@ export default class NetworkLoadCounter extends AsyncCalculator implements Loade
         return super.calculatePart(requestMessage).then(result => new Message.CalculationDone(this.label, result));
     }
 
-    async load(loadMessage: Message.NetworkLoadRequest): Promise<Message.LoadComplete> {
+    async load(loadMessage: Message.NetworkLoadRequest): Promise<Message.TranchesLoadComplete> {
         return fetch(loadMessage.jsonUrl, {
             method: "GET",
             headers: {"Content-Type": "application/json; charset=utf-8"}
@@ -26,7 +26,7 @@ export default class NetworkLoadCounter extends AsyncCalculator implements Loade
             .then(response => response.arrayBuffer())
             .then(arrayBuffer => {
                 this.JSONS.push(JSON.parse(new TextDecoder().decode(arrayBuffer)));
-                return new Message.LoadComplete(this.label, this.source, loadMessage.jsonUrl, arrayBuffer);
+                return new Message.TranchesLoadComplete(this.label, this.source, loadMessage.jsonUrl, arrayBuffer);
             })
     }
 }
