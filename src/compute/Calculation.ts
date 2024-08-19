@@ -6,7 +6,7 @@ export namespace Calculation {
         clearState(): void;
     }
 
-    class CalculationResultProcessor implements ResultProcessor {
+    export class CalculationResultProcessor implements ResultProcessor {
         private calcResults: Array<CalculationResult> = [];
         private finalResult: CalculationResult | undefined;
 

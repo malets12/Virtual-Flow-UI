@@ -78,7 +78,7 @@ export namespace Downloads {
     }
 
     function makeRegexp(): [string, string] {
-        State.Snapshot.saveNew(new Model.AxisValues(), true);
+        State.Snapshot.saveFull();
         const result: Array<Array<string>> = [];
         ORDER.map.forEach(() => result.push([]));
         for (const [dimension, range]: [string, Model.Range] of State.Snapshot.current()) {

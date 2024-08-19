@@ -1,3 +1,4 @@
+import {LocalStorage} from "../component/LocalStorage.ts";
 import {Calculation} from "../compute/Calculation.ts";
 import {AxisSelector} from "../component/AxisSelector.ts";
 import {Loader} from "../component/Loader.ts";
@@ -10,6 +11,7 @@ import {State} from "../compute/State.ts";
 import {abbrN} from "../compute/Utils.ts";
 import {Message} from "../worker/infrastructure/Message.ts";
 import {Pool} from "../worker/Pool.ts";
+import {Saver} from "../worker/Saver.ts";
 
 export namespace ValuesDrawer {
     export async function render(axis: Model.AxisValues, isInit: boolean = false): Promise<void> {
@@ -41,8 +43,11 @@ export namespace ValuesDrawer {
             element.classList.remove(...COLOR.values);
         }
         Calculation.CALC_RESULT.clearState();
-        Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, Array.from(State.Snapshot.current().keys())))
-            .catch(error => console.error(error));
+        if (State.Snapshot.isDefaultState(axis) && LocalStorage.hasPersistedDefaultState()) {
+            return Saver.SAVER.loadDefaultState();
+        } else {
+            return Pool.WORKER_POOL.notifyAll(new Message.CalculationRequest(isInit, axis, possibleValues, Array.from(State.Snapshot.current().keys())));
+        }
     }
 
     export function fillCells(result: Calculation.CalculationResult): void {

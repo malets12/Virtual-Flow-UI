@@ -62,13 +62,22 @@ export namespace Model {
         }
     }
 
-    export class DBEntry {
+    export class TranchesDBEntry {
         readonly part: string;
         readonly bytes: any;
 
         constructor(part: string, bytes: any) {
             this.part = part;
             this.bytes = bytes;
+        }
+    }
+    export class StateDBEntry {
+        readonly part: string;
+        readonly object: any;
+
+        constructor(part: string, object: any) {
+            this.part = part;
+            this.object = object;
         }
     }
 }

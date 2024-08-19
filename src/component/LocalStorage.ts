@@ -4,18 +4,18 @@ export namespace LocalStorage {
     const TRUE: string = "true";
 
     export function markHasTranchesLocalCopy(): void {
-        //window.localStorage.setItem(TRANCHES_LOCAL_COPY, TRUE); //TODO revert
+        window.localStorage.setItem(TRANCHES_LOCAL_COPY, TRUE);
     }
 
     export function hasTranchesLocalCopy(): boolean {
         return window.localStorage.getItem(TRANCHES_LOCAL_COPY) === TRUE;
     }
 
-    export function markHasPersistedInitial(): void {
+    export function markHasPersistedDefaultState(): void {
         window.localStorage.setItem(CALCULATED_SNAPSHOT, TRUE);
     }
 
-    export function hasPersistedInitial(): boolean {
+    export function hasPersistedDefaultState(): boolean {
         return window.localStorage.getItem(CALCULATED_SNAPSHOT) === TRUE;
     }
 }

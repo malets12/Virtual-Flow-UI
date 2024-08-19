@@ -66,7 +66,9 @@ import {Saver} from "./worker/Saver.ts";
     for (let i: number = 0; i < Constant.PARTS; i++) {
         init.push(Pool.WORK_QUEUE.push(new Message.NetworkLoadRequest(`tranche/tranche${i}.json`)));
     }
-    Promise.all(init).then(() => Pool.WORKER_POOL.init(callback));
+    Promise.all(init)
+        .then(() => Pool.WORKER_POOL.init(callback))
+        .then(() => Saver.SAVER.init());
 })();
 
 function doFullReload():void {

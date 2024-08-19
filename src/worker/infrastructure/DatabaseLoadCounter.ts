@@ -41,11 +41,11 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
     }
 
     private async getDBEntry(db: IDBDatabase, key: string): Promise<Message.TranchesLoadComplete | Message.WorkerMessage> {
-        return new Promise((resolve) => {
-            db.transaction(Constant.Database.STORE_NAME, "readonly")
-                .objectStore(Constant.Database.STORE_NAME)
+        return new Promise((resolve): void => {
+            db.transaction(Constant.Database.STORE_NAME_TRANCHES, "readonly")
+                .objectStore(Constant.Database.STORE_NAME_TRANCHES)
                 .get(key).onsuccess = (event: Event): void => {
-                const result: Model.DBEntry | null = event.target.result;
+                const result: Model.TranchesDBEntry | null = event.target.result;
                 if (result) {
                     this.JSONS.push(JSON.parse(new TextDecoder().decode(result.bytes)));
                     resolve(new Message.TranchesLoadComplete(this.label, this.source, key));

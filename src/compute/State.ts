@@ -48,13 +48,22 @@ export namespace State {
 
     export class Snapshot {
         private map: ReadonlyMap<string, Model.Range> = new Map();
+        private readonly initialAxisValues: Model.AxisValues = new Model.AxisValues();
 
         static current(): ReadonlyMap<string, Model.Range> {
             return SLIDERS_STATE.map;
         }
 
-        static saveNew(axis: Model.AxisValues, full: boolean = false): void {
-            SLIDERS_STATE.map = Snapshot.currentState(axis, full);
+        static saveFull(): void {
+            SLIDERS_STATE.map = Snapshot.currentState(SLIDERS_STATE.initialAxisValues, true);
+        }
+
+        static saveNew(axis: Model.AxisValues): void {
+            SLIDERS_STATE.map = Snapshot.currentState(axis);
+        }
+
+        static isDefaultState(axis: Model.AxisValues): boolean {
+            return Model.AxisValues.equals(axis, SLIDERS_STATE.initialAxisValues); //TODO add initial sliders state
         }
 
         static isNeedRecalculation(axisValues: Model.AxisValues): boolean {

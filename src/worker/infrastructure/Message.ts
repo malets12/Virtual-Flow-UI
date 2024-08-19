@@ -33,7 +33,7 @@ export namespace Message {
 
     export class DBLoadRequest extends LoadRequest {
         constructor() {
-            super(Constant.Source.DATABASE, Constant.DataType.INITIAL_STATE);
+            super(Constant.Source.DATABASE, Constant.DataType.DEFAULT_STATE);
         }
     }
 
@@ -76,7 +76,7 @@ export namespace Message {
         readonly state: Calculation.CalculationResult;
 
         constructor(state: Calculation.CalculationResult) {
-            super(Constant.DataType.INITIAL_STATE);
+            super(Constant.DataType.DEFAULT_STATE);
             this.state = state;
         }
     }
@@ -105,7 +105,7 @@ export namespace Message {
         readonly state: Calculation.CalculationResult;
 
         constructor(action: Constant.Action, from: string, source: Constant.Source, state: Calculation.CalculationResult) {
-            super(action, from, source, Constant.DataType.INITIAL_STATE);
+            super(action, from, source, Constant.DataType.DEFAULT_STATE);
             this.state = state;
         }
     }
