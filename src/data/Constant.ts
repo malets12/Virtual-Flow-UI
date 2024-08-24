@@ -7,7 +7,7 @@ export namespace Constant {
 
     export enum DataType { TRANCHES = "Tranches", DEFAULT_STATE = "Default State" }
 
-    export enum Database { NAME = "VirtualFlow", VERSION = 1, STORE_NAME_TRANCHES = "tranches", STORE_NAME_STATE = "state" }
+    export enum Database { NAME = "VirtualFlow", VERSION = 2, STORE_NAME_TRANCHES = "tranches", STORE_NAME_STATE = "state" }
 
     export enum EventName { SAVE_TO_DATABASE = "save-to-database", CALCULATION_DONE = "calculation-done" }
 

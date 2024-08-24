@@ -1,5 +1,6 @@
 import {Model} from "../../model/Model.ts";
-import {AsyncCalculator, Calculator, Loader, Tranche} from "./Abstractions.ts";
+import {AsyncCalculator, Calculator, Database, Loader, Tranche} from "./Abstractions.ts";
+import IndexedDB from "./IndexedDB.ts";
 import {Message} from "./Message.ts";
 import {Constant} from "../../data/Constant.ts";
 
@@ -7,51 +8,37 @@ export default class DatabaseLoadCounter extends AsyncCalculator implements Load
     readonly JSONS: Array<Tranche>;
     readonly label: string;
     readonly source: Constant.Source;
-    readonly errorMessage: Message.WorkerMessage;
+    private readonly dbWrapper: Database;
 
     constructor(label: string) {
         super();
         this.JSONS = [];
         this.label = label;
-        this.source = Constant.Source.DATABASE
-        this.errorMessage = new Message.WorkerMessage(Constant.Action.RELOAD, label);
+        this.source = Constant.Source.DATABASE;
+        this.dbWrapper = new IndexedDB(label);
     }
 
     async calculate(requestMessage: Message.CalculationRequest): Promise<Message.CalculationDone> {
-        return super.calculatePart(requestMessage).then(result => new Message.CalculationDone(this.label, result));
+        return super.calculatePart(requestMessage)
+            .then(result => new Message.CalculationDone(this.label, result))
+            .finally((): void => this.dbWrapper.close());
     }
 
-    async load(loadMessage: Message.NetworkLoadRequest): Promise<Message.TranchesLoadComplete | Message.WorkerMessage> {
-        return new Promise((resolve) => {
-            const req: IDBOpenDBRequest = indexedDB.open(Constant.Database.NAME, Constant.Database.VERSION);
-            req.onsuccess = (): void => {
-                const db: IDBDatabase = req.result;
-                console.log(this.label, `DB init done, looking for ${loadMessage.jsonUrl}`);
-                resolve(this.getDBEntry(db, loadMessage.jsonUrl));
-            };
-            req.onerror = (event: Event): void => {
-                console.error(this.label, `DB init: ${event.target.errorCode}`);
-                resolve(this.errorMessage);
-            };
-            req.onupgradeneeded = (): void => {
-                console.error(this.label, `No DB ${Constant.Database.NAME}`);
-                resolve(this.errorMessage);
-            };
-        });
+    async load(loadMessage: Message.NetworkLoadRequest): Promise<Message.TranchesLoadComplete> {
+        return this.dbWrapper.getDB().then(db => this.getDBEntry(db, loadMessage.jsonUrl));
     }
 
-    private async getDBEntry(db: IDBDatabase, key: string): Promise<Message.TranchesLoadComplete | Message.WorkerMessage> {
-        return new Promise((resolve): void => {
+    private async getDBEntry(db: IDBDatabase, key: string): Promise<Message.TranchesLoadComplete> {
+        return new Promise((resolve, reject): void => {
             db.transaction(Constant.Database.STORE_NAME_TRANCHES, "readonly")
                 .objectStore(Constant.Database.STORE_NAME_TRANCHES)
                 .get(key).onsuccess = (event: Event): void => {
                 const result: Model.TranchesDBEntry | null = event.target.result;
-                if (result) {
+                if (result !== null) {
                     this.JSONS.push(JSON.parse(new TextDecoder().decode(result.bytes)));
                     resolve(new Message.TranchesLoadComplete(this.label, this.source, key));
                 } else {
-                    console.error(this.label, `No JSON for ${key}`, event.target);
-                    resolve(this.errorMessage);
+                    reject(`${this.label}: No JSON for ${key}; ${event.target.error}`);
                 }
             };
         });

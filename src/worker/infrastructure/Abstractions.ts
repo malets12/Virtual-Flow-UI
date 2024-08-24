@@ -14,6 +14,11 @@ export interface Calculator {
     calculate(requestMessage: Message.CalculationRequest): Promise<Message.CalculationDone>;
 }
 
+export interface Database {
+    getDB(): Promise<IDBDatabase>;
+    close(): void;
+}
+
 export abstract class AsyncCalculator {
     abstract readonly JSONS: Array<Tranche>;
     abstract readonly label: string;

@@ -4,12 +4,15 @@ import {Message} from "./infrastructure/Message.ts";
 
 const worker: DatabaseLoadCounter = new DatabaseLoadCounter(self.name);
 self.addEventListener("message", async (msg: MessageEvent): Promise<void> => {
-    const message: Message.NetworkLoadRequest | Message.CalculationRequest = msg.data; //TODO rename load request
+    const message: Message.NetworkLoadRequest | Message.CalculationRequest = msg.data;
     switch (message.action) {
         case Constant.Action.LOAD: {
             worker.load(message as Message.NetworkLoadRequest)
                 .then(result => self.postMessage(result))
-                .catch(error => console.error(error));
+                .catch(error => {
+                    console.error(error);
+                    self.postMessage(new Message.WorkerMessage(Constant.Action.RELOAD, self.name))
+                });
             break;
         }
         case Constant.Action.CALCULATE: {

@@ -1,21 +1,22 @@
 import {Calculation} from "../compute/Calculation.ts";
 import {Constant} from "../data/Constant.ts";
 import {Model} from "../model/Model.ts";
+import type {Database} from "./infrastructure/Abstractions.ts";
+import IndexedDB from "./infrastructure/IndexedDB.ts";
 import {Message} from "./infrastructure/Message.ts";
 
 const DEFAULT_STATE_PART: string = "default-state-part-";
 const RESULT_PROCESSOR: Calculation.ResultProcessor = new Calculation.CalculationResultProcessor();
+const dbWrapper: Database = new IndexedDB(self.name, true);
 
 self.addEventListener("message", async (msg: MessageEvent): Promise<void> => {
-    const message: Message.DBLoadRequest | Message.SaveRequest = msg.data;
-    const req: IDBOpenDBRequest = indexedDB.open(Constant.Database.NAME, Constant.Database.VERSION);
-    req.onsuccess = (): void => {
-        const db: IDBDatabase = req.result;
+    dbWrapper.getDB().then(db => {
+        const message: Message.DBLoadRequest | Message.SaveRequest = msg.data;
         switch (message.action) {
             case Constant.Action.SAVE: {
                 persist(db, message as Message.SaveRequest)
                     .then(result => self.postMessage(result))
-                    .catch(error => console.error(error));
+                    .catch(error => console.error(error))
                 break;
             }
             case Constant.Action.LOAD: {
@@ -26,45 +27,32 @@ self.addEventListener("message", async (msg: MessageEvent): Promise<void> => {
                 break;
             }
         }
-
-    };
-    req.onerror = (event: Event): void => {
-        console.error(self.name, "On DB init.", event.target);
-    };
-    req.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
-        const tranchesStore: IDBObjectStore = event.currentTarget.result.createObjectStore(
-            Constant.Database.STORE_NAME_TRANCHES, { keyPath: "part" });
-        tranchesStore.createIndex("bytes", "bytes", { unique: false });
-        const stateStore: IDBObjectStore = event.currentTarget.result.createObjectStore(
-            Constant.Database.STORE_NAME_STATE, { keyPath: "part" });
-        stateStore.createIndex("object", "object", { unique: false });
-    };
+    })
 }, false);
 
 async function persist(db: IDBDatabase, message: Message.SaveRequest): Promise<Message.SavingDone> {
     return new Promise((resolve, reject): void => {
         const dataType: Constant.DataType = message.dataType;
         const store: string = toStoreName(dataType);
-        console.log(self.name, `DB init done for saving ${dataType}.`);
         const transaction: IDBTransaction = db.transaction(store, "readwrite");
         transaction.onerror = (event: Event): void => {
-            reject(new Message.SavingDone(self.name, dataType, `Failed to persist to '${store}': ${event.target}`));
+            reject(`Failed to persist '${dataType}' to '${store}': ${event.target.error}`);
         };
         transaction.oncomplete = (): void => {
-            resolve(new Message.SavingDone(self.name, dataType, `Successfully saved to '${store}' DB.`));
+            resolve(new Message.SavingDone(self.name, dataType, `Successfully saved to '${store}' DB`));
         };
         const objectStore: IDBObjectStore = transaction.objectStore(store);
-        objectStore.onerror = (event: Event): void => {
-            reject(self.name, `While saving ${dataType} to '${store}'.`, event.target);
-        };
+        objectStore.clear();
         saveAll(message, objectStore);
     });
 }
 
 function toStoreName(dataType: Constant.DataType): string {
     switch (dataType) {
-        case Constant.DataType.TRANCHES: return Constant.Database.STORE_NAME_TRANCHES;
-        case Constant.DataType.DEFAULT_STATE: return Constant.Database.STORE_NAME_STATE;
+        case Constant.DataType.TRANCHES:
+            return Constant.Database.STORE_NAME_TRANCHES;
+        case Constant.DataType.DEFAULT_STATE:
+            return Constant.Database.STORE_NAME_STATE;
     }
 }
 
@@ -97,34 +85,39 @@ function saveAll(message: Message.SaveRequest, objectStore: IDBObjectStore): voi
             objectStore.add(new Model.StateDBEntry(`${DEFAULT_STATE_PART}0`, new Calculation.CalculationResult(state.cellCounts, map0, state.totalTranches, state.totalCompounds)));
             objectStore.add(new Model.StateDBEntry(`${DEFAULT_STATE_PART}1`, new Calculation.CalculationResult(new Map(), map1, 0, 0)));
             objectStore.add(new Model.StateDBEntry(`${DEFAULT_STATE_PART}2`, new Calculation.CalculationResult(new Map(), map2, 0, 0)));
-            //TODO check is serialization required
             break;
         }
     }
 }
 
 async function load(db: IDBDatabase, message: Message.DBLoadRequest): Promise<Message.StateLoadComplete> {
-    return new Promise((resolve, reject): void => {
-        console.log(self.name, `DB init done for loading ${message.dataType}.`);
-        const key: IDBKeyRange = IDBKeyRange.bound(`${DEFAULT_STATE_PART}0`, `${DEFAULT_STATE_PART}2`);
-        const request: IDBRequest<any[]> = db.transaction(Constant.Database.STORE_NAME_STATE, "readonly")
-            .objectStore(Constant.Database.STORE_NAME_STATE)
-            .getAll(key);
-        request.onsuccess = (): void => {
-            for (const part: Model.StateDBEntry of request.result as ReadonlyArray<Model.StateDBEntry>) {
-                RESULT_PROCESSOR.addPart(part.object as Calculation.CalculationResult)
-                RESULT_PROCESSOR.getFinalResult();
-                console.log(part.part); //TODO
-            }
+    return Promise.all(
+        [`${DEFAULT_STATE_PART}0`, `${DEFAULT_STATE_PART}1`, `${DEFAULT_STATE_PART}2`].map(key => getDBEntry(db, key)
+            .then(entry => {
+                RESULT_PROCESSOR.addPart(entry.object as Calculation.CalculationResult);
+                return RESULT_PROCESSOR.getFinalResult();
+            })))
+        .then(() => {
             const result: Calculation.CalculationResult | undefined = RESULT_PROCESSOR.getFinalResult();
             if (result === undefined) {
-                reject(`${message.dataType} is undefined after merging.`);
+                throw `${message.dataType} is undefined after merging.`;
             } else {
-                resolve(new Message.StateLoadComplete(Constant.Action.LOAD, self.name, Constant.Source.DATABASE, result));
+                return new Message.StateLoadComplete(Constant.Action.LOAD, self.name, Constant.Source.DATABASE, result);
             }
-        }
-        request.onerror = (event: Event): void => {
-            reject(`Failed to read ${message.dataType} from ${Constant.Database.STORE_NAME_STATE} of DB: ${event.target}.`);
-        }
+        });
+}
+
+async function getDBEntry(db: IDBDatabase, key: string): Promise<Model.StateDBEntry> {
+    return new Promise((resolve, reject): void => {
+        db.transaction(Constant.Database.STORE_NAME_STATE, "readonly")
+            .objectStore(Constant.Database.STORE_NAME_STATE)
+            .get(key).onsuccess = (event: Event): void => {
+            const result: Model.StateDBEntry | null = event.target.result;
+            if (result !== null) {
+                resolve(result);
+            } else {
+                reject(`Failed to read '${key}' from '${Constant.Database.STORE_NAME_STATE}' store: ${event.target.error}`);
+            }
+        };
     });
 }
