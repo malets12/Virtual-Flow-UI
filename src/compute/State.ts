@@ -47,15 +47,26 @@ export namespace State {
     }
 
     export class Snapshot {
-        private map: ReadonlyMap<string, Model.Range> = new Map();
-        private readonly initialAxisValues: Model.AxisValues = new Model.AxisValues();
+        private map: ReadonlyMap<string, Model.Range>;
+        private readonly defaultAxisValues: Model.AxisValues;
+        private defaultSlidersValues: ReadonlyMap<string, Model.Range>;
+
+        constructor() {
+            this.map = new Map();
+            this.defaultAxisValues = new Model.AxisValues();
+            const dimensionDefaults: Map<string, Model.Range> = new Map();
+            for (const [dimension, values]: [string, ReadonlyMap<string, string>] of KEY.map.entries()) {
+                dimensionDefaults.set(dimension, new Model.Range(1, values.size));
+            }
+            this.defaultSlidersValues = dimensionDefaults;
+        }
 
         static current(): ReadonlyMap<string, Model.Range> {
             return SLIDERS_STATE.map;
         }
 
-        static saveFull(): void {
-            SLIDERS_STATE.map = Snapshot.currentState(SLIDERS_STATE.initialAxisValues, true);
+        static getFull(): ReadonlyMap<string, Model.Range> {
+            return Snapshot.currentState(SLIDERS_STATE.defaultAxisValues, true);
         }
 
         static saveNew(axis: Model.AxisValues): void {
@@ -63,7 +74,8 @@ export namespace State {
         }
 
         static isDefaultState(axis: Model.AxisValues): boolean {
-            return Model.AxisValues.equals(axis, SLIDERS_STATE.initialAxisValues); //TODO add initial sliders state
+            return Model.AxisValues.equals(axis, SLIDERS_STATE.defaultAxisValues)
+                && Snapshot.equals(SLIDERS_STATE.defaultSlidersValues, Snapshot.getFull());
         }
 
         static isNeedRecalculation(axisValues: Model.AxisValues): boolean {
@@ -85,6 +97,16 @@ export namespace State {
                         dimension !== Model.AxisValues.getValue(axisValues, Constant.Axis.Y)))
                 .forEach(dimension => snapshot.set(dimension, Model.Range.getValidated(Slider.getRange(dimension))));
             return snapshot;
+        }
+
+        private static equals(state1: ReadonlyMap<string, Model.Range>, state2: ReadonlyMap<string, Model.Range>): boolean {
+            for (const [dimension, range]: [string, Model.Range] of state1) {
+                const otherRange: Model.Range | undefined = state2.get(dimension);
+                if (otherRange === undefined || !Model.Range.equals(range, otherRange)) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 

@@ -78,10 +78,9 @@ export namespace Downloads {
     }
 
     function makeRegexp(): [string, string] {
-        State.Snapshot.saveFull();
         const result: Array<Array<string>> = [];
         ORDER.map.forEach(() => result.push([]));
-        for (const [dimension, range]: [string, Model.Range] of State.Snapshot.current()) {
+        for (const [dimension, range]: [string, Model.Range] of State.Snapshot.getFull()) {
             const map: ReadonlyMap<string, string> | undefined = KEY.map.get(dimension);
             if (map === undefined) {
                 continue;

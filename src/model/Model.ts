@@ -60,6 +60,10 @@ export namespace Model {
         static isWithZeroLength(range: Range): boolean {
             return range.min === range.max;
         }
+
+        static equals(range1: Range, range2: Range): boolean {
+            return range1.min === range2.min && range1.max === range2.max;
+        }
     }
 
     export class TranchesDBEntry {
